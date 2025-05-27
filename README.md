@@ -40,7 +40,7 @@ Systèmes externes : Email, QR Code Service, Base de données MySQL
 
 ## 🏗️ Décisions architecturales
 
-Le fichier [ADRs.md](ADRs.md) documente 6 décisions techniques majeures :
+Le fichier [ADRs.pdf](ADRs.pdf) documente 6 décisions techniques majeures :
 
 1. **ADR-001** - Application Mobile Flutter (mobile-first)
 2. **ADR-002** - Clean Architecture + DDD
