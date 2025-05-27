@@ -17,7 +17,9 @@ ADR-003: Stack Technique Flutter + Spring Boot
 Frontend : Flutter/Dart pour performance native mobile
 Backend : Java 17+ Spring Boot 3.x pour robustesse enterprise
 Base de données : Mysqld
+
 Message Queue : RabbitMQ pour fiabilité
+
 Cache : Redis pour performance
 
 ADR-004: Authentification JWT + Spring Security + Flutter Secure Storage
