@@ -1,0 +1,26 @@
+# === Java ===
+*.class
+*.jar
+*.war
+*.ear
+target/
+bin/
+
+# === IDEs ===
+# VS Code
+.vscode/
+
+# JetBrains (IntelliJ, PyCharm, WebStorm, etc.)
+.idea/
+*.iml
+
+# === OS Files ===
+.DS_Store
+Thumbs.db
+
+# === Logs ===
+*.log
+
+# === Environment Files ===
+.env
+.env.local
