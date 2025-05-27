@@ -10,7 +10,7 @@ Repository contenant la documentation technique et architecturale du projet de g
 ### 📊 Diagrammes
 
 #### Diagramme de contexte
-![Diagramme de contexte](diagramme_context.png)
+![Diagramme de contexte](Diagramme_context.png)
 
 Présente les acteurs principaux du système :
 - **Employés** - Utilisateurs standard
@@ -18,7 +18,7 @@ Présente les acteurs principaux du système :
 - **Managers** - Administration système
 
 #### Diagramme de conteneurs
-![Diagramme de conteneurs](container-diagram.png)
+![Diagramme de conteneurs](Diagramme_conteneurs.png)
 
 Architecture technique du système :
 - **Flutter Frontend** - Application mobile
@@ -27,6 +27,16 @@ Architecture technique du système :
 - **MySQL Database** - Base de données
 - **Email System** - Notifications
 - **QR Code Service** - Génération QR codes
+
+#### Diagramme de composants
+![Diagramme de conteneurs](Diagramme_composants.png)
+Vue détaillée des composants internes du système :
+
+Acteurs : Employé, Secrétaire, Manager avec différents niveaux d'accès
+Flutter Frontend : Interface utilisateur multiplateforme
+Spring Boot API Core : Controllers REST, logique métier, réservations, authentification
+Spring Security Service : Authentification JWT et autorisations
+Systèmes externes : Email, QR Code Service, Base de données MySQL
 
 ## 🏗️ Décisions architecturales
 
