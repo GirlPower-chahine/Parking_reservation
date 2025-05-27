@@ -5,12 +5,12 @@ Repository contenant la documentation technique et architecturale du projet de g
 ## 📁 Contenu du repository
 
 ### 📄 Documents
-- **[Architecture_Decision_Records_(ADRs).pdf](Architecture_Decision_Records_(ADRs).pdf)** - Architecture Decision Records détaillant les choix techniques
+- **[Architecture_Decision_Records_(ADRs).pdf](docs/Architecture_Decision_Records_(ADRs).pdf)** - Architecture Decision Records détaillant les choix techniques
 
 ### 📊 Diagrammes
 
 #### Diagramme de contexte
-![Diagramme de contexte](Diagramme_context.png)
+![Diagramme de contexte](docs/Diagramme_context.png)
 
 Présente les acteurs principaux du système :
 - **Employés** - Utilisateurs standard
@@ -18,7 +18,7 @@ Présente les acteurs principaux du système :
 - **Managers** - Administration système
 
 #### Diagramme de conteneurs
-![Diagramme de conteneurs](Diagramme_conteneurs.png)
+![Diagramme de conteneurs](docs/Diagramme_conteneurs.png)
 
 Architecture technique du système :
 - **Flutter Frontend** - Application mobile
@@ -29,7 +29,7 @@ Architecture technique du système :
 - **QR Code Service** - Génération QR codes
 
 #### Diagramme de composants
-![Diagramme de comosants](Diagramme_component.png)
+![Diagramme de comosants](docs/Diagramme_component.png)
 Vue détaillée des composants internes du système :
 
 Acteurs : Employé, Secrétaire, Manager avec différents niveaux d'accès
