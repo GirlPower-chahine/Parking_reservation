@@ -5,7 +5,7 @@ Repository contenant la documentation technique et architecturale du projet de g
 ## 📁 Contenu du repository
 
 ### 📄 Documents
-- **[ADRs.md](ADRs.md)** - Architecture Decision Records détaillant les choix techniques
+- **[ADRs.pdf](ADRs.pdf)** - Architecture Decision Records détaillant les choix techniques
 
 ### 📊 Diagrammes
 
