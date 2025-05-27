@@ -10,7 +10,7 @@ Repository contenant la documentation technique et architecturale du projet de g
 ### 📊 Diagrammes
 
 #### Diagramme de contexte
-![Diagramme de contexte](context-diagram.png)
+![Diagramme de contexte](diagramme_context.png)
 
 Présente les acteurs principaux du système :
 - **Employés** - Utilisateurs standard
