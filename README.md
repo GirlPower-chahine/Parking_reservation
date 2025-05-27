@@ -1,42 +1,52 @@
-ADRs Flutter + Spring Boot :
+# 📋 Documentation Parking Management System
 
-ADR-001: Application Mobile Flutter
+Repository contenant la documentation technique et architecturale du projet de gestion de parking Flutter + Spring Boot.
 
-Justification du choix mobile-first pour la gestion de parking
-Avantages : QR code natif, notifications push, GPS, performance native
-Cross-platform avec un seul codebase
+## 📁 Contenu du repository
 
-ADR-002: Clean Architecture + DDD
+### 📄 Documents
+- **[ADRs.md](ADRs.md)** - Architecture Decision Records détaillant les choix techniques
 
-Séparation claire des responsabilités
-Business logic indépendante du framework
-Testabilité et maintenabilité améliorées
+### 📊 Diagrammes
 
-ADR-003: Stack Technique Flutter + Spring Boot
+#### Diagramme de contexte
+![Diagramme de contexte](context-diagram.png)
 
-Frontend : Flutter/Dart pour performance native mobile
-Backend : Java 17+ Spring Boot 3.x pour robustesse enterprise
+Présente les acteurs principaux du système :
+- **Employés** - Utilisateurs standard
+- **Superviseurs** - Gestion des réservations  
+- **Managers** - Administration système
 
-Base de données : Mysqld
+#### Diagramme de conteneurs
+![Diagramme de conteneurs](container-diagram.png)
 
-Message Queue : RabbitMQ pour fiabilité
+Architecture technique du système :
+- **Flutter Frontend** - Application mobile
+- **Spring Boot API Core** - API REST
+- **Spring Security Service** - Authentification JWT
+- **MySQL Database** - Base de données
+- **Email System** - Notifications
+- **QR Code Service** - Génération QR codes
 
-Cache : Redis pour performance
+## 🏗️ Décisions architecturales
 
-ADR-004: Authentification JWT + Spring Security + Flutter Secure Storage
+Le fichier [ADRs.md](ADRs.md) documente 6 décisions techniques majeures :
 
-Spring Security pour le backend (battle-tested)
-Flutter Secure Storage pour sécurité mobile (Keychain/Keystore)
-Support biométrie native
+1. **ADR-001** - Application Mobile Flutter (mobile-first)
+2. **ADR-002** - Clean Architecture + DDD
+3. **ADR-003** - Stack Flutter + Spring Boot + MySQL
+4. **ADR-004** - Authentification JWT + Spring Security
+5. **ADR-005** - Architecture Modular Monolith
+6. **ADR-006** - BLoC Pattern + Repository Pattern
 
-ADR-005: Modular Monolith
+## 📖 Utilisation
 
-Single database avec séparation par domaines
-Simplicité opérationnelle vs complexité microservices
-ACID transactions cross-domain
+Cette documentation sert de référence pour :
+- Comprendre l'architecture du système
+- Consulter les décisions techniques prises
+- Onboarder de nouveaux développeurs
+- Maintenir la cohérence architecturale
 
-ADR-006: BLoC Pattern + Repository Pattern
+---
 
-State management prévisible pour Flutter
-Séparation UI/Business Logic
-Architecture testable et réactive
+**Note :** Ce repository contient uniquement la documentation. Le code source se trouve dans les repositories séparés frontend et backend.
