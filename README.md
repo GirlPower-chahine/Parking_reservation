@@ -42,12 +42,17 @@ Systèmes externes : Email, QR Code Service, Base de données MySQL
 
 Le fichier [ADRs.pdf](ADRs.pdf) documente 6 décisions techniques majeures :
 
-1. **ADR-001** - Application Mobile Flutter (mobile-first)
+1. **ADR-001** - Application Mobile et Web Flutter
 2. **ADR-002** - Clean Architecture + DDD
 3. **ADR-003** - Stack Flutter + Spring Boot + MySQL
 4. **ADR-004** - Authentification JWT + Spring Security
 5. **ADR-005** - Architecture Modular Monolith
 6. **ADR-006** - BLoC Pattern + Repository Pattern
+7. **ADR-007** - API externe QR Code (60 places A01-F10)
+8. **ADR-008** - Containerisation Docker obligatoire
+9. **ADR-009** - Stratégie de Tests (JUnit, TestContainers, Flutter)
+10. **ADR-010** - Architecture Monolithe Modulaire
+11. **ADR-011** - Service QR Code Externe
 
 ## 📖 Utilisation
 
