@@ -1,6 +1,4 @@
-# DOCS
-
-ADRs mis à jour pour Flutter + Spring Boot :
+ADRs Flutter + Spring Boot :
 
 ADR-001: Application Mobile Flutter
 
