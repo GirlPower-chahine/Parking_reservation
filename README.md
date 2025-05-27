@@ -29,7 +29,7 @@ Architecture technique du système :
 - **QR Code Service** - Génération QR codes
 
 #### Diagramme de composants
-![Diagramme de conteneurs](Diagramme_composants.png)
+![Diagramme de conteneurs](Diagramme_component.png)
 Vue détaillée des composants internes du système :
 
 Acteurs : Employé, Secrétaire, Manager avec différents niveaux d'accès
