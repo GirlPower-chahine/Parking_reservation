@@ -14,13 +14,7 @@
 
 ## Contexte
 
-Notre **système de réservation de parking** doit être accessible par des utilisateurs non-techniques (employés, managers, secrétaires) sur différentes plateformes. 
-
-### Fonctionnalités requises
-- Réservation de places de parking
-- Scan de QR codes pour check-in
-- Consultation de dashboards analytics
-- Administration du système
+Notre système de réservation de parking doit être accessible par des utilisateurs non-techniques (employés, managers, secrétaires) sur différentes plateformes. L'application doit permettre la réservation de places, le scan de QR codes pour check-in, la consultation de dashboards analytics, et l'administration du système.
 
 ---
 
@@ -121,25 +115,14 @@ Notre **système de réservation de parking** doit être accessible par des util
 
 ## Justification
 
-### Productivité
-Une seule codebase pour toutes les plateformes = **développement 3x plus rapide**
+**Productivité:** Une seule codebase pour toutes les plateformes = développement 3x plus rapide
 
-### Fonctionnalités métier
-Scanner QR code natif **essentiel** pour notre cas d'usage de parking
+**Fonctionnalités métier:** Scanner QR code natif essentiel pour notre cas d'usage
 
-### Équipe réduite
-**Maintenabilité optimale** avec une technologie unique
+**Équipe réduite:** Maintenabilité avec une technologie unique
 
-### Performance
-Rendu natif **suffisant** pour notre application business
+**Performance:** Rendu natif suffisant pour notre application business
 
 ---
 
-## Impact Attendu
-
-| **Critère** | **Bénéfice** |
-|-------------|--------------|
-| **Temps de développement** | Réduction de 66% grâce à la codebase unique |
-| **Complexité de maintenance** | Réduction de 70% avec une seule technologie |
-| **Cohérence utilisateur** | Interface unifiée sur toutes les plateformes |
-| **Fonctionnalités spécifiques** | Scanner QR natif directement intégré |
+*Document validé par l'équipe développement le 2025-01-27*
