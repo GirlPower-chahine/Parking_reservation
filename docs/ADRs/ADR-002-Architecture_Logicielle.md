@@ -14,13 +14,7 @@
 
 ## Contexte
 
-Notre **système de parking** nécessite une architecture claire pour gérer la complexité métier (réservations, utilisateurs, analytics) tout en restant maintenable par une équipe réduite.
-
-### Enjeux architecturaux
-- Gestion de la logique métier complexe
-- Maintien de la qualité avec équipe réduite
-- Évolutivité du système
-- Facilitation des tests
+Notre système de parking nécessite une architecture claire pour gérer la complexité métier (réservations, utilisateurs, analytics) tout en restant maintenable par une équipe réduite.
 
 ---
 
@@ -91,36 +85,10 @@ Notre **système de parking** nécessite une architecture claire pour gérer la 
 
 ## Justification
 
-### Qualité
-Architecture **recommandée** pour projets avec logique métier complexe
+**Qualité:** Architecture recommandée pour projets avec logique métier complexe
 
-### Tests
-**Facilite les tests unitaires** de la logique métier
+**Tests:** Facilite les tests unitaires de la logique métier
 
-### Évolution
-Permet **changements technologiques** sans impact métier
+**Évolution:** Permet changements technologiques sans impact métier
 
-### Apprentissage
-**Applique les concepts** vus en cours
-
----
-
-## Structure Proposée
-
-| **Couche** | **Responsabilité** |
-|------------|-------------------|
-| **Domain** | Entités métier, règles business, interfaces |
-| **Application** | Cas d'usage, orchestration |
-| **Infrastructure** | Implémentations techniques, base de données |
-| **Presentation** | Controllers, DTOs, API REST |
-
----
-
-## Bénéfices Attendus
-
-| **Aspect** | **Amélioration** |
-|------------|------------------|
-| **Testabilité** | Tests unitaires isolés de l'infrastructure |
-| **Maintenabilité** | Séparation claire des responsabilités |
-| **Évolutivité** | Changements techniques sans impact métier |
-| **Qualité du code** | Respect des principes SOLID |
+**Apprentissage:** Applique les concepts vus en cours
