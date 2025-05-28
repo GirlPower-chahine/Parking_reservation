@@ -1,4 +1,4 @@
-FROM eclipse-temurin:17-jdk-alpine as build
+FROM eclipse-temurin:17-jdk as build
 
 WORKDIR /app
 
@@ -15,7 +15,7 @@ COPY src src
 
 RUN ./mvnw clean install -Dmaven.test.skip=true -Dfile.encoding=UTF-8
 
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:17-jre
 
 WORKDIR /app
 
