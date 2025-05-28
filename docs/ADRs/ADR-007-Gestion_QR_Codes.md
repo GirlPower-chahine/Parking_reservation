@@ -1,42 +1,92 @@
-ADR-007: Gestion QR Codes
-Date: 2025-01-27
-Statut: Accepté
-Décideurs: Équipe développement
-Contexte
+# ADR-007: Gestion QR Codes
+
+---
+
+## Informations Générales
+
+| **Attribut** | **Valeur** |
+|--------------|------------|
+| **Date** | 2025-01-27 |
+| **Statut** | **Accepté** |
+| **Décideurs** | Équipe développement |
+
+---
+
+## Contexte
+
 Chaque place de parking (60 places A01-F10) doit avoir un QR code pour permettre le check-in. Le système doit gérer la génération, validation, et libération automatique des places.
-Problème
-Choisir entre génération interne ou service externe pour les QR codes.
-Options Considérées
-Option 1: Génération Interne
-Avantages:
 
-Pas de dépendance externe
-Contrôle total
+---
 
-Inconvénients:
+## Problème
 
-Code métier pollué
-Maintenance supplémentaire
-Pas notre cœur de métier
+**Choisir entre génération interne ou service externe pour les QR codes.**
 
-Option 2: Service Externe
-Avantages:
+---
 
-Séparation des responsabilités
-Service spécialisé plus fiable
-Pas de maintenance QR code
-Changement de provider facile
+## Options Considérées
 
-Inconvénients:
+### Option 1: Génération Interne
 
-Dépendance externe
-Coût potentiel
+<table>
+<tr>
+<td width="50%">
 
-Décision
-Nous utilisons un service externe pour la génération QR codes.
-Justification
+**Avantages**
+- Pas de dépendance externe
+- Contrôle total
 
-Focus métier: Concentration sur la logique de réservation
-Fiabilité: Service spécialisé plus robuste
-Architecture: Respecte la séparation des préoccupations
-Évolution: Changement de provider sans impact métier
+</td>
+<td width="50%">
+
+**Inconvénients**
+- Code métier pollué
+- Maintenance supplémentaire
+- Pas notre cœur de métier
+
+</td>
+</tr>
+</table>
+
+---
+
+### Option 2: Service Externe **[CHOISI]**
+
+<table>
+<tr>
+<td width="50%">
+
+**Avantages**
+- Séparation des responsabilités
+- Service spécialisé plus fiable
+- Pas de maintenance QR code
+- Changement de provider facile
+
+</td>
+<td width="50%">
+
+**Inconvénients**
+- Dépendance externe
+- Coût potentiel
+
+</td>
+</tr>
+</table>
+
+---
+
+## Décision
+
+**Service externe** est utilisé pour la génération QR codes.
+
+---
+
+## Justification
+
+**Focus métier:** Concentration sur la logique de réservation
+
+**Fiabilité:** Service spécialisé plus robuste
+
+**Architecture:** Respecte la séparation des préoccupations
+
+**Évolution:** Changement de provider sans impact métier
