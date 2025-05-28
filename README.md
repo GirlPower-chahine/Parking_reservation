@@ -65,3 +65,18 @@ Cette documentation sert de référence pour :
 ---
 
 **Note :** Ce repository contient uniquement la documentation. Le code source se trouve dans les repositories séparés frontend et backend.
+
+## 🚀 Lancement de l'application
+
+### Prérequis
+- Docker Desktop installé et démarré
+
+### Commandes
+
+```bash
+# 1. Cloner le repository
+git clone https://github.com/votre-username/parking-reservation.git
+cd parking-reservation
+
+# 2. Lancer l'application complète
+docker compose up --build -d
