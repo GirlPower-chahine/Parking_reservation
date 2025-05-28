@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:parking_system/screens/administration_screen/admin_panel.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -241,21 +242,21 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         child: _isLoading
                             ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              )
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
                             : const Text(
-                                'SE CONNECTER',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
+                          'SE CONNECTER',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -284,7 +285,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // Walking Skeleton - Connexion simulée sans API
+  // Walking Skeleton - Connexion simulée AVEC navigation
   void _onLoginPressed() {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
@@ -303,18 +304,33 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       _isLoading = true;
     });
+
     Future.delayed(const Duration(seconds: 2), () {
       setState(() {
         _isLoading = false;
       });
+
+      // Affichage du message de succès
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('✅ Connexion réussie ! (Mode Walking Skeleton)'),
           backgroundColor: Colors.green,
         ),
       );
+
+      // NAVIGATION VERS ADMIN PANEL - AJOUT ICI
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (_) => const AdminPanel(token: 'demo_token'),
+            ),
+          );
+        }
+      });
     });
   }
+
   void _showHelpDialog() {
     showDialog(
       context: context,
@@ -323,7 +339,7 @@ class _LoginScreenState extends State<LoginScreen> {
           title: const Text('Walking Skeleton'),
           content: const Text(
             'Ceci est une version de démonstration.\n\n'
-            'Utilisez n\'importe quel email et mot de passe pour vous connecter.',
+                'Utilisez n\'importe quel email et mot de passe pour vous connecter.',
           ),
           actions: [
             TextButton(

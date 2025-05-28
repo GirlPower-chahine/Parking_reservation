@@ -44,28 +44,8 @@ class MyApp extends StatelessWidget {
             ),
           ),
         ),
-        home: BlocConsumer<LoginBloc, LoginState>(
-          listener: (context, state) {
-            if (state.status == LoginStatus.initial) {
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (_) => const LoginScreen()),
-                    (route) => false,
-              );
-            }
-          },
-          builder: (context, state) {
-            if (state.status == LoginStatus.loading) {
-              return const Scaffold(
-                body: Center(
-                  child: CircularProgressIndicator(
-                    color: Color(0xFF1E3A8A),
-                  ),
-                ),
-              );
-            }
-            return const LoginScreen();
-          },
-        ),
+        // Navigation simple - LoginScreen gère tout
+        home: const LoginScreen(),
       ),
     );
   }
