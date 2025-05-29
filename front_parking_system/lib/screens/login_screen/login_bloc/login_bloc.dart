@@ -6,6 +6,7 @@ import '../../../../shared/core/models/user.dart';
 import '../../../shared/core/exceptions/app_exception.dart';
 import '../../../shared/core/models/auth/login/login_dto.dart';
 import '../../../shared/core/services/repository/auth_repository.dart';
+import '../../../shared/core/services/storage/local_storage.dart';
 
 part 'login_event.dart';
 part 'login_state.dart';
@@ -28,6 +29,12 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     try {
       final loginResponse = await authRepository.login(event.loginDTO);
 
+      await LocalStorage.saveToken(loginResponse.token);
+      await LocalStorage.saveUser(User(
+        id: loginResponse.userId,
+        role: loginResponse.role,
+        username: event.loginDTO.username,
+      ));
 
       emit(state.copyWith(
         status: LoginStatus.success,

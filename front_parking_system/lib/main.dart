@@ -12,11 +12,11 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await LocalStorage.clearAll();
 
-  final storage = const FlutterSecureStorage();
+  const storage = FlutterSecureStorage();
   final token = await storage.read(key: 'auth_token');
   final role = await storage.read(key: 'user_role');
 
-  final apiService = ApiService(baseUrl: 'http://192.168.1.165:8080/api');
+  final apiService = ApiService();
   final authRepository = AuthRepository(apiService);
 
   if (token != null) {

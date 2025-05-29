@@ -1,16 +1,17 @@
 import 'package:dio/dio.dart';
+import '../storage/local_storage.dart';
 
 class ApiService {
-  final String baseUrl;
   final Dio dio;
 
-  ApiService({required this.baseUrl})
+  ApiService()
       : dio = Dio(BaseOptions(
-    baseUrl: baseUrl,
+    baseUrl: 'http://192.168.1.165:8080/api',
     headers: {
       'Content-Type': 'application/json',
     },
   )) {
+    // Ajouter les logs pour le debug
     dio.interceptors.add(LogInterceptor(
       requestBody: true,
       responseBody: true,
@@ -18,6 +19,18 @@ class ApiService {
       responseHeader: true,
       error: true,
     ));
+
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          final token = await LocalStorage.getToken();
+          if (token != null && token.isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
+          return handler.next(options);
+        },
+      ),
+    );
   }
 
   Future<Response> post(String path, dynamic data) async {

@@ -5,6 +5,7 @@ import '../../shared/core/services/repository/auth_repository.dart';
 import '../login_screen/login_bloc/login_bloc.dart';
 import '../login_screen/login_screen.dart';
 import 'add_user_screen.dart';
+import 'user_management_screen.dart';
 
 class AdminPanel extends StatefulWidget {
   // final String token;
@@ -231,63 +232,7 @@ class _AdminPanelState extends State<AdminPanel> {
   }
 
   Widget _buildUsersScreen() {
-    return Container(
-      color: Colors.grey[100],
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: 12, // Walking Skeleton: 12 utilisateurs d'exemple
-        itemBuilder: (context, index) {
-          final users = [
-            {'name': 'Alice Martin', 'role': 'EMPLOYEE', 'email': 'alice@company.com'},
-            {'name': 'Bob Dupont', 'role': 'MANAGER', 'email': 'bob@company.com'},
-            {'name': 'Claire Leroy', 'role': 'SECRETARY', 'email': 'claire@company.com'},
-            {'name': 'David Chen', 'role': 'EMPLOYEE', 'email': 'david@company.com'},
-            {'name': 'Emma Wilson', 'role': 'EMPLOYEE', 'email': 'emma@company.com'},
-            {'name': 'Frank Miller', 'role': 'MANAGER', 'email': 'frank@company.com'},
-            {'name': 'Grace Kim', 'role': 'EMPLOYEE', 'email': 'grace@company.com'},
-            {'name': 'Henry Brown', 'role': 'EMPLOYEE', 'email': 'henry@company.com'},
-            {'name': 'Isabelle Durand', 'role': 'SECRETARY', 'email': 'isabelle@company.com'},
-            {'name': 'Jack Thompson', 'role': 'EMPLOYEE', 'email': 'jack@company.com'},
-            {'name': 'Karen Lee', 'role': 'MANAGER', 'email': 'karen@company.com'},
-            {'name': 'Louis Garcia', 'role': 'EMPLOYEE', 'email': 'louis@company.com'},
-          ];
-          
-          final user = users[index];
-          final roleColor = _getRoleColor(user['role']!);
-          
-          return Card(
-            margin: const EdgeInsets.only(bottom: 8),
-            child: ListTile(
-              leading: CircleAvatar(
-                backgroundColor: roleColor,
-                child: Text(
-                  user['name']!.substring(0, 2).toUpperCase(),
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                ),
-              ),
-              title: Text(user['name']!),
-              subtitle: Text(user['email']!),
-              trailing: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: roleColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: roleColor.withOpacity(0.3)),
-                ),
-                child: Text(
-                  user['role']!,
-                  style: TextStyle(
-                    color: roleColor,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
+    return const UserManagementScreen();
   }
 
   Widget _buildLeftDrawer() {

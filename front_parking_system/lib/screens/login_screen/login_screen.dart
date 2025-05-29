@@ -42,7 +42,7 @@ class _LoginScreenState extends State<LoginScreen> {
               MaterialPageRoute(builder: (_) => AdminPanel()),
             );
           }
-        } else {
+        } else if (state.status == LoginStatus.error) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.exception?.toString() ?? 'Vous n\'êtes pas Manager'),
