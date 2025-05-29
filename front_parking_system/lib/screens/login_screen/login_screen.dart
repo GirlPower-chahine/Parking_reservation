@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:parking_system/screens/administration_screen/admin_panel.dart';
+import 'package:parking_system/screens/employee_screen/employee_panel.dart';
+import '../../shared/core/models/auth/login/login_dto.dart';
+import 'login_bloc/login_bloc.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -29,263 +33,273 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Header avec design professionnel
-              Container(
-                height: 240,
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [primaryBlue, lightBlue],
-                  ),
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(60),
-                    bottomRight: Radius.circular(20),
-                  ),
-                ),
-                child: Stack(
-                  children: [
-                    // Éléments décoratifs géométriques
-                    Positioned(
-                      left: 20,
-                      top: 80,
-                      child: Container(
-                        width: 70,
-                        height: 70,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
+    return BlocListener<LoginBloc, LoginState>(
+      listener: (context, state) {
+        if (state.status == LoginStatus.success) {
+          final role = state.user?.role;
+          print('User role: $role');
+          if (role == 'MANAGER') {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => AdminPanel()),
+            );
+          }
+        } else if (state.status == LoginStatus.error) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.exception?.toString() ?? 'Vous n\'êtes pas autorisé à vous connecter.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Header design
+                Container(
+                  height: 240,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [primaryBlue, lightBlue],
                     ),
-                    Positioned(
-                      right: 40,
-                      bottom: 20,
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.15),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(60),
+                      bottomRight: Radius.circular(20),
                     ),
-                    Positioned(
-                      right: 70,
-                      top: 100,
-                      child: Transform.rotate(
-                        angle: 0.3,
+                  ),
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        left: 20,
+                        top: 80,
                         child: Container(
-                          width: 60,
-                          height: 60,
+                          width: 70,
+                          height: 70,
                           decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
+                            shape: BoxShape.circle,
                           ),
                         ),
                       ),
-                    ),
-                    // Icône parking au centre
-                    Center(
-                      child: Container(
-                        width: 100,
-                        height: 100,
-                        margin: const EdgeInsets.only(top: 20),
+                      Positioned(
+                        right: 40,
+                        bottom: 20,
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.15),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        right: 70,
+                        top: 100,
+                        child: Transform.rotate(
+                          angle: 0.3,
+                          child: Container(
+                            width: 60,
+                            height: 60,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Center(
+                        child: Container(
+                          width: 100,
+                          height: 100,
+                          margin: const EdgeInsets.only(top: 20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.local_parking,
+                            size: 50,
+                            color: primaryBlue,
+                          ),
+                        ),
+                      ),
+                      const Positioned(
+                        bottom: 30,
+                        left: 0,
+                        right: 0,
+                        child: Center(
+                          child: Text(
+                            'ParkingApp',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Formulaire
+                Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Connexion',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: darkGrey,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Accédez à votre espace de réservation',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: mediumGrey,
+                        ),
+                      ),
+                      const SizedBox(height: 40),
+                      Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
+                          color: lightGrey,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.grey.withOpacity(0.2),
+                          ),
+                        ),
+                        child: TextField(
+                          controller: _emailController,
+                          decoration: const InputDecoration(
+                            hintText: 'Email',
+                            hintStyle: TextStyle(color: mediumGrey),
+                            prefixIcon: Icon(Icons.email_outlined, color: mediumGrey),
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: lightGrey,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.grey.withOpacity(0.2),
+                          ),
+                        ),
+                        child: TextField(
+                          controller: _passwordController,
+                          obscureText: _obscurePassword,
+                          decoration: InputDecoration(
+                            hintText: 'Mot de passe',
+                            hintStyle: const TextStyle(color: mediumGrey),
+                            prefixIcon: const Icon(Icons.lock_outline, color: mediumGrey),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                color: mediumGrey,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              },
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 40),
+                      Container(
+                        width: double.infinity,
+                        height: 55,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [primaryBlue, lightBlue],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 10,
-                              offset: const Offset(0, 5),
+                              color: primaryBlue.withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
                             ),
                           ],
                         ),
-                        child: const Icon(
-                          Icons.local_parking,
-                          size: 50,
-                          color: primaryBlue,
-                        ),
-                      ),
-                    ),
-                    // Titre
-                    const Positioned(
-                      bottom: 30,
-                      left: 0,
-                      right: 0,
-                      child: Center(
-                        child: Text(
-                          'ParkingApp',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Formulaire de connexion
-              Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Connexion',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: darkGrey,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Accédez à votre espace de réservation',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: mediumGrey,
-                      ),
-                    ),
-                    const SizedBox(height: 40),
-                    // Champ Email
-                    Container(
-                      decoration: BoxDecoration(
-                        color: lightGrey,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.grey.withOpacity(0.2),
-                        ),
-                      ),
-                      child: TextField(
-                        controller: _emailController,
-                        decoration: const InputDecoration(
-                          hintText: 'Email',
-                          hintStyle: TextStyle(color: mediumGrey),
-                          prefixIcon: Icon(Icons.email_outlined, color: mediumGrey),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    // Champ Mot de passe
-                    Container(
-                      decoration: BoxDecoration(
-                        color: lightGrey,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.grey.withOpacity(0.2),
-                        ),
-                      ),
-                      child: TextField(
-                        controller: _passwordController,
-                        obscureText: _obscurePassword,
-                        decoration: InputDecoration(
-                          hintText: 'Mot de passe',
-                          hintStyle: const TextStyle(color: mediumGrey),
-                          prefixIcon: const Icon(Icons.lock_outline, color: mediumGrey),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                              color: mediumGrey,
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _onLoginPressed,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            onPressed: () {
-                              setState(() {
-                                _obscurePassword = !_obscurePassword;
-                              });
-                            },
                           ),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 40),
-                    // Bouton de connexion
-                    Container(
-                      width: double.infinity,
-                      height: 55,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [primaryBlue, lightBlue],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: primaryBlue.withOpacity(0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: ElevatedButton(
-                        onPressed: _isLoading ? null : _onLoginPressed,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          shadowColor: Colors.transparent,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: _isLoading
-                            ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                            : const Text(
-                          'SE CONNECTER',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                          child: _isLoading
+                              ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                              : const Text(
+                            'SE CONNECTER',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 20),
-                    // Lien d'aide (Walking Skeleton)
-                    Center(
-                      child: TextButton(
-                        onPressed: () {
-                          _showHelpDialog();
-                        },
-                        child: const Text(
-                          'Besoin d\'aide ?',
-                          style: TextStyle(
-                            color: mediumGrey,
-                            fontSize: 14,
+                      const SizedBox(height: 20),
+                      Center(
+                        child: TextButton(
+                          onPressed: _showHelpDialog,
+                          child: const Text(
+                            'Besoin d\'aide ?',
+                            style: TextStyle(
+                              color: mediumGrey,
+                              fontSize: 14,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  // Walking Skeleton - Connexion simulée AVEC navigation
   void _onLoginPressed() {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
@@ -300,35 +314,9 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    // Simulation de chargement
-    setState(() {
-      _isLoading = true;
-    });
-
-    Future.delayed(const Duration(seconds: 2), () {
-      setState(() {
-        _isLoading = false;
-      });
-
-      // Affichage du message de succès
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('✅ Connexion réussie ! (Mode Walking Skeleton)'),
-          backgroundColor: Colors.green,
-        ),
-      );
-
-      // NAVIGATION VERS ADMIN PANEL - AJOUT ICI
-      Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (_) => const AdminPanel(token: 'demo_token'),
-            ),
-          );
-        }
-      });
-    });
+    context.read<LoginBloc>().add(
+      LoginRequested(LoginDTO(username: email, password: password)),
+    );
   }
 
   void _showHelpDialog() {

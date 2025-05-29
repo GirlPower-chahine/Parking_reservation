@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../login_screen/login_bloc/login_bloc.dart';
+import '../login_screen/login_screen.dart';
 
 class AdminPanel extends StatefulWidget {
-  final String token;
-  
-  const AdminPanel({
-    super.key,
-    required this.token,
-  });
+  // final String token;
+  //
+  // const AdminPanel({
+  //   super.key,
+  //   required this.token,
+  // });
 
   @override
   State<AdminPanel> createState() => _AdminPanelState();
@@ -50,9 +51,13 @@ class _AdminPanelState extends State<AdminPanel> {
           const SizedBox(width: 10),
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white),
-            onPressed: () {
-              context.read<LoginBloc>().add(LogoutRequested());
-            },
+              onPressed: () {
+                context.read<LoginBloc>().add(LogoutRequested());
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                      (route) => false,
+                );
+              }
           ),
           const SizedBox(width: 10),
         ],

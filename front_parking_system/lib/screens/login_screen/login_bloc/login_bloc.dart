@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:meta/meta.dart';
 
 import '../../../../shared/core/models/user.dart';
@@ -19,11 +20,32 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
   }
 
   Future<void> _onLoginRequested(
-    LoginRequested event,
-    Emitter<LoginState> emit,
-  ) async {
-    // TODO: Implémenter la logique de connexion
+      LoginRequested event,
+      Emitter<LoginState> emit,
+      ) async {
+    emit(state.copyWith(status: LoginStatus.loading));
+
+    try {
+      final loginResponse = await authRepository.login(event.loginDTO);
+
+
+      emit(state.copyWith(
+        status: LoginStatus.success,
+        token: loginResponse.token,
+        user: User(
+          id: loginResponse.userId,
+          role: loginResponse.role,
+          username: event.loginDTO.username,
+        ),
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        status: LoginStatus.error,
+        exception: AppException(e.toString()),
+      ));
+    }
   }
+
 
   Future<void> _onCheckAuthStatus(
     CheckAuthStatus event,
@@ -33,9 +55,12 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
   }
 
   Future<void> _onLogoutRequested(
-    LogoutRequested event,
-    Emitter<LoginState> emit,
-  ) async {
-    // TODO: Implémenter la logique de déconnexion
+      LogoutRequested event,
+      Emitter<LoginState> emit,
+      ) async {
+    final storage = FlutterSecureStorage();
+    await storage.deleteAll();
+
+    emit(LoginState());
   }
 }
