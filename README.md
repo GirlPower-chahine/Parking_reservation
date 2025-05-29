@@ -81,6 +81,4 @@ cd parking-reservation
 # 2. Lancer l'application complète
 docker compose up --build -d
 
-
-#3. Aller sur l'URL
-http://localhost:3000/ 
+IDE : Android Studio
