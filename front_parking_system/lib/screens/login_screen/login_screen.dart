@@ -37,16 +37,15 @@ class _LoginScreenState extends State<LoginScreen> {
       listener: (context, state) {
         if (state.status == LoginStatus.success) {
           final role = state.user?.role;
-          print('User role: $role');
           if (role == 'MANAGER') {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(builder: (_) => AdminPanel()),
             );
           }
-        } else if (state.status == LoginStatus.error) {
+        } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.exception?.toString() ?? 'Vous n\'êtes pas autorisé à vous connecter.'),
+              content: Text(state.exception?.toString() ?? 'Vous n\'êtes pas Manager'),
               backgroundColor: Colors.red,
             ),
           );

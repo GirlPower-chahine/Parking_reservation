@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:parking_system/screens/administration_screen/register_bloc/register_bloc.dart';
+import '../../shared/core/services/repository/auth_repository.dart';
 import '../login_screen/login_bloc/login_bloc.dart';
 import '../login_screen/login_screen.dart';
+import 'add_user_screen.dart';
 
 class AdminPanel extends StatefulWidget {
   // final String token;
@@ -15,9 +18,10 @@ class AdminPanel extends StatefulWidget {
   State<AdminPanel> createState() => _AdminPanelState();
 }
 
+
 class _AdminPanelState extends State<AdminPanel> {
   int _selectedIndex = 0;
-  final List<String> _titles = ['Places de Parking', 'Réservations', 'Utilisateurs'];
+  final List<String> _titles = ['Places de Parking', 'Réservations', 'Utilisateurs', 'Ajouter un utilisateur'];
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
@@ -87,6 +91,10 @@ class _AdminPanelState extends State<AdminPanel> {
             icon: Icon(Icons.people),
             label: 'Utilisateurs',
           ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.add),
+            label: 'Ajouter',
+          ),
         ],
       ),
     );
@@ -100,6 +108,8 @@ class _AdminPanelState extends State<AdminPanel> {
         return _buildReservationsScreen();
       case 2:
         return _buildUsersScreen();
+      case 3:
+        return _buildAddUserScreen();
       default:
         return const Center(child: Text('Écran non trouvé'));
     }
@@ -110,7 +120,6 @@ class _AdminPanelState extends State<AdminPanel> {
       color: Colors.grey[100],
       child: Column(
         children: [
-          // Header avec statistiques
           Container(
             margin: const EdgeInsets.all(16),
             padding: const EdgeInsets.all(20),
@@ -138,10 +147,10 @@ class _AdminPanelState extends State<AdminPanel> {
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: 10, // Walking Skeleton: 10 places d'exemple
+              itemCount: 10,
               itemBuilder: (context, index) {
                 final spots = ['A01', 'A02', 'A03', 'B01', 'B02', 'C01', 'C02', 'D01', 'D02', 'E01'];
-                final isOccupied = index % 3 == 0; // Simulation d'occupation
+                final isOccupied = index % 3 == 0;
                 
                 return Card(
                   margin: const EdgeInsets.only(bottom: 8),
@@ -211,6 +220,13 @@ class _AdminPanelState extends State<AdminPanel> {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildAddUserScreen() {
+    return BlocProvider(
+      create: (_) => RegisterBloc(authRepository: RepositoryProvider.of<AuthRepository>(context),),
+      child: const AddUserScreen(),
     );
   }
 
@@ -347,6 +363,7 @@ class _AdminPanelState extends State<AdminPanel> {
             _buildMenuItem(Icons.local_parking, 'Places de Parking', 0, badge: 60),
             _buildMenuItem(Icons.event_seat, 'Réservations', 1, badge: 18),
             _buildMenuItem(Icons.people, 'Utilisateurs', 2, badge: 12),
+            _buildMenuItem(Icons.person_add, 'Ajouter un utilisateur', 3),
             const Spacer(),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),

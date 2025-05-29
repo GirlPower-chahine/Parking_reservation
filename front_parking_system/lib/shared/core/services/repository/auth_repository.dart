@@ -14,7 +14,6 @@ class AuthRepository {
     return LoginResponseDTO.fromJson(response.data);
   }
 
-
   Future<RegisterResponseDTO> register(RegisterDTO registerDTO) async {
     final response = await apiService.post('/auth/register', registerDTO.toJson());
     return RegisterResponseDTO.fromJson(response.data);

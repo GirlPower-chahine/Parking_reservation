@@ -12,7 +12,6 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await LocalStorage.clearAll();
 
-
   final storage = const FlutterSecureStorage();
   final token = await storage.read(key: 'auth_token');
   final role = await storage.read(key: 'user_role');
@@ -24,27 +23,27 @@ void main() async {
     apiService.setAuthToken(token);
   }
 
-  runApp(MyApp(
-    authRepository: authRepository,
-    token: token,
-    role: role,
-  ));
+  runApp(
+    RepositoryProvider<AuthRepository>.value(
+      value: authRepository,
+      child: MyApp(token: token, role: role),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
-  final AuthRepository authRepository;
   final String? token;
   final String? role;
 
   const MyApp({
     super.key,
-    required this.authRepository,
     this.token,
     this.role,
   });
 
   @override
   Widget build(BuildContext context) {
+    final authRepository = RepositoryProvider.of<AuthRepository>(context);
     return BlocProvider<LoginBloc>(
       create: (context) => LoginBloc(authRepository: authRepository),
       child: MaterialApp(
@@ -73,7 +72,6 @@ class MyApp extends StatelessWidget {
     if (token != null && role == 'MANAGER') {
       return AdminPanel();
     }
-
     return const LoginScreen();
   }
 }
