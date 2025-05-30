@@ -69,7 +69,7 @@ class MyApp extends StatelessWidget {
   }
 
   Widget _getInitialScreen() {
-    if (token != null && role == 'MANAGER') {
+    if (token != null && role == 'SECRETARY') {
       return AdminPanel();
     }
     return const LoginScreen();

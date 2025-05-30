@@ -1,4 +1,3 @@
-
 import '../../models/user.dart';
 import '../api/api_service.dart';
 
@@ -6,6 +5,15 @@ class UserRepository {
   final ApiService apiService;
 
   UserRepository(this.apiService);
+
+  Future<User> updateUser(String userId, Map<String, dynamic> data) async {
+    final response = await apiService.dio.put('/users/$userId', data: data);
+    return User.fromJson(response.data);
+  }
+
+  Future<void> deleteUser(String userId) async {
+    await apiService.dio.delete('/users/$userId');
+  }
 
   Future<List<User>> fetchUsers({String? role}) async {
     final path = role == null ? '/users' : '/users/$role';

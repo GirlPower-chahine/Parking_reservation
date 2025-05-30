@@ -6,12 +6,13 @@ class ApiService {
 
   ApiService()
       : dio = Dio(BaseOptions(
-    baseUrl: 'http://192.168.1.165:8080/api',
+    baseUrl: 'http://localhost:8080/api',
+    connectTimeout: const Duration(seconds: 5),
+    receiveTimeout: const Duration(seconds: 5),
     headers: {
       'Content-Type': 'application/json',
     },
   )) {
-    // Ajouter les logs pour le debug
     dio.interceptors.add(LogInterceptor(
       requestBody: true,
       responseBody: true,

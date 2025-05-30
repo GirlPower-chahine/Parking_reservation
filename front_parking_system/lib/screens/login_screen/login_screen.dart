@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:parking_system/screens/administration_screen/admin_panel.dart';
-import 'package:parking_system/screens/employee_screen/employee_panel.dart';
 import '../../shared/core/models/auth/login/login_dto.dart';
 import 'login_bloc/login_bloc.dart';
 
@@ -37,7 +36,7 @@ class _LoginScreenState extends State<LoginScreen> {
       listener: (context, state) {
         if (state.status == LoginStatus.success) {
           final role = state.user?.role;
-          if (role == 'MANAGER') {
+          if (role == 'SECRETARY') {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(builder: (_) => AdminPanel()),
             );
@@ -45,7 +44,7 @@ class _LoginScreenState extends State<LoginScreen> {
         } else if (state.status == LoginStatus.error) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.exception?.toString() ?? 'Vous n\'êtes pas Manager'),
+              content: Text(state.exception?.toString() ?? 'Vous n\'êtes pas Secretaire'),
               backgroundColor: Colors.red,
             ),
           );
