@@ -6,19 +6,16 @@ import '../login_screen/login_bloc/login_bloc.dart';
 import '../login_screen/login_screen.dart';
 import 'add_user_screen.dart';
 import 'users/user_management_screen.dart';
+import 'reservation_list_widget.dart';
+import '../../shared/core/services/api/api_service.dart';
+import '../../shared/core/services/repository/parking_repository.dart';
 
 class AdminPanel extends StatefulWidget {
-  // final String token;
-  //
-  // const AdminPanel({
-  //   super.key,
-  //   required this.token,
-  // });
+  const AdminPanel({super.key});
 
   @override
   State<AdminPanel> createState() => _AdminPanelState();
 }
-
 
 class _AdminPanelState extends State<AdminPanel> {
   int _selectedIndex = 0;
@@ -27,76 +24,79 @@ class _AdminPanelState extends State<AdminPanel> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      key: _scaffoldKey,
-      backgroundColor: const Color(0xFF1E3A8A),
-      appBar: AppBar(
+    return RepositoryProvider(
+      create: (context) => ParkingRepository(ApiService()),
+      child: Scaffold(
+        key: _scaffoldKey,
         backgroundColor: const Color(0xFF1E3A8A),
-        elevation: 0,
-        title: Text(
-          _titles[_selectedIndex],
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
+        appBar: AppBar(
+          backgroundColor: const Color(0xFF1E3A8A),
+          elevation: 0,
+          title: Text(
+            _titles[_selectedIndex],
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.menu, color: Colors.white),
-          onPressed: () {
-            _scaffoldKey.currentState!.openDrawer();
-          },
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.analytics, color: Colors.white),
+          leading: IconButton(
+            icon: const Icon(Icons.menu, color: Colors.white),
             onPressed: () {
-              _showAnalytics();
+              _scaffoldKey.currentState!.openDrawer();
             },
           ),
-          const SizedBox(width: 10),
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.white),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.analytics, color: Colors.white),
               onPressed: () {
-                context.read<LoginBloc>().add(LogoutRequested());
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
-                      (route) => false,
-                );
-              }
-          ),
-          const SizedBox(width: 10),
-        ],
-      ),
-      drawer: _buildLeftDrawer(),
-      body: _buildBody(),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFF1E3A8A),
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.local_parking),
-            label: 'Places',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.event_seat),
-            label: 'Réservations',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.people),
-            label: 'Utilisateurs',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.add),
-            label: 'Ajouter',
-          ),
-        ],
+                _showAnalytics();
+              },
+            ),
+            const SizedBox(width: 10),
+            IconButton(
+                icon: const Icon(Icons.logout, color: Colors.white),
+                onPressed: () {
+                  context.read<LoginBloc>().add(LogoutRequested());
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (_) => const LoginScreen()),
+                        (route) => false,
+                  );
+                }
+            ),
+            const SizedBox(width: 10),
+          ],
+        ),
+        drawer: _buildLeftDrawer(),
+        body: _buildBody(),
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _selectedIndex,
+          onTap: (index) {
+            setState(() {
+              _selectedIndex = index;
+            });
+          },
+          type: BottomNavigationBarType.fixed,
+          selectedItemColor: const Color(0xFF1E3A8A),
+          unselectedItemColor: Colors.grey,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.local_parking),
+              label: 'Places',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.event_seat),
+              label: 'Réservations',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.people),
+              label: 'Utilisateurs',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.add),
+              label: 'Ajouter',
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -117,68 +117,7 @@ class _AdminPanelState extends State<AdminPanel> {
   }
 
   Widget _buildParkingSpotsScreen() {
-    return Container(
-      color: Colors.grey[100],
-      child: Column(
-        children: [
-          Container(
-            margin: const EdgeInsets.all(16),
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _StatCard(title: 'Total Places', value: '60', color: Color(0xFF1E3A8A)),
-                _StatCard(title: 'Disponibles', value: '42', color: Colors.green),
-                _StatCard(title: 'Occupées', value: '18', color: Colors.orange),
-              ],
-            ),
-          ),
-          // Liste des places
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: 10,
-              itemBuilder: (context, index) {
-                final spots = ['A01', 'A02', 'A03', 'B01', 'B02', 'C01', 'C02', 'D01', 'D02', 'E01'];
-                final isOccupied = index % 3 == 0;
-                
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: ListTile(
-                    leading: Icon(
-                      Icons.local_parking,
-                      color: isOccupied ? Colors.red : Colors.green,
-                    ),
-                    title: Text('Place ${spots[index]}'),
-                    subtitle: Text(
-                      isOccupied ? 'Occupée - John Doe' : 'Disponible',
-                      style: TextStyle(
-                        color: isOccupied ? Colors.red : Colors.green,
-                      ),
-                    ),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.qr_code),
-                      onPressed: () => _showQRCode(spots[index]),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
+    return const ReservationListWidget();
   }
 
   Widget _buildReservationsScreen() {
@@ -198,9 +137,9 @@ class _AdminPanelState extends State<AdminPanel> {
             {'user': 'Grace Kim', 'spot': 'E03', 'time': '10:30 - 18:30'},
             {'user': 'Henry Brown', 'spot': 'C06', 'time': '09:30 - 17:30'},
           ];
-          
+
           final reservation = reservations[index];
-          
+
           return Card(
             margin: const EdgeInsets.only(bottom: 8),
             child: ListTile(
@@ -363,8 +302,8 @@ class _AdminPanelState extends State<AdminPanel> {
           color: isSelected ? Colors.white.withOpacity(0.2) : Colors.transparent,
           border: isSelected
               ? const Border(
-                  left: BorderSide(color: Colors.white, width: 3),
-                )
+            left: BorderSide(color: Colors.white, width: 3),
+          )
               : null,
         ),
         child: Row(
@@ -395,18 +334,6 @@ class _AdminPanelState extends State<AdminPanel> {
         ),
       ),
     );
-  }
-
-  Color _getRoleColor(String role) {
-    switch (role) {
-      case 'MANAGER':
-        return Colors.purple;
-      case 'SECRETARY':
-        return Colors.orange;
-      case 'EMPLOYEE':
-      default:
-        return const Color(0xFF1E3A8A);
-    }
   }
 
   void _showQRCode(String spotId) {
