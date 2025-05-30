@@ -1,31 +1,34 @@
 package org.example.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
-@Table(name = "PARKING_SPOTS")
+@Table(name = "VEHICLES")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ParkingSpot {
+public class Vehicle {
     @Id
-    @Column(name = "spot_id", length = 3)
-    private String spotId; // A01, A02, ..., F10
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "vehicle_id")
+    private UUID vehicleId;
 
-    @Column(name = "`row`", nullable = false, length = 1)
-    private String rowIdentifier; // A, B, C, D, E, F
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
-    @Column(name = "number", nullable = false)
-    private Integer spotNumber; // 1-10
+    @Column(unique = true, nullable = false, length = 20)
+    private String licensePlate;
 
     @Column(nullable = false)
-    private Boolean hasElectricCharger; // true pour rows A et F
+    private Boolean isElectricHybrid;
 
-    @Column(nullable = false)
-    private Boolean isAvailable = true;
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

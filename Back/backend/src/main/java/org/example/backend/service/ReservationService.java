@@ -25,6 +25,7 @@ public class ReservationService {
     private final ReservationRepository reservationRepository;
     private final ParkingSpotRepository parkingSpotRepository;
     private final UserRepository userRepository;
+
     private ParkingSpot findAvailableSpot(ReservationDTO dto) {
         List<ParkingSpot> availableSpots;
 
@@ -61,8 +62,15 @@ public class ReservationService {
         Reservation reservation = new Reservation();
         reservation.setUser(user);
         reservation.setParkingSpot(availableSpot);
-        reservation.setReservationDate(dto.getReservationDate());
-        reservation.setTimeSlot(dto.getTimeSlot());
+
+        // ✅ CORRIGÉ : Utilisation des nouveaux champs
+        LocalDateTime startTime = dto.getReservationDate().atTime(
+                "MORNING".equals(dto.getTimeSlot()) ? 8 : 14, 0);
+        LocalDateTime endTime = dto.getReservationDate().atTime(
+                "MORNING".equals(dto.getTimeSlot()) ? 12 : 18, 0);
+
+        reservation.setStartDateTime(startTime);
+        reservation.setEndDateTime(endTime);
         reservation.setStatus(ReservationStatus.ACTIVE);
 
         Reservation saved = reservationRepository.save(reservation);
@@ -131,8 +139,15 @@ public class ReservationService {
         Reservation reservation = new Reservation();
         reservation.setUser(user);
         reservation.setParkingSpot(spot);
-        reservation.setReservationDate(dto.getReservationDate());
-        reservation.setTimeSlot(dto.getTimeSlot());
+
+        // ✅ CORRIGÉ : Utilisation des nouveaux champs
+        LocalDateTime startTime = dto.getReservationDate().atTime(
+                "MORNING".equals(dto.getTimeSlot()) ? 8 : 14, 0);
+        LocalDateTime endTime = dto.getReservationDate().atTime(
+                "MORNING".equals(dto.getTimeSlot()) ? 12 : 18, 0);
+
+        reservation.setStartDateTime(startTime);
+        reservation.setEndDateTime(endTime);
         reservation.setStatus(ReservationStatus.ACTIVE);
 
         Reservation saved = reservationRepository.save(reservation);
@@ -215,8 +230,15 @@ public class ReservationService {
         ReservationResponseDTO dto = new ReservationResponseDTO();
         dto.setReservationId(reservation.getReservationId());
         dto.setSpotId(reservation.getParkingSpot().getSpotId());
-        dto.setReservationDate(reservation.getReservationDate());
-        dto.setTimeSlot(reservation.getTimeSlot());
+
+        // ✅ CORRIGÉ : Conversion depuis startDateTime/endDateTime
+        dto.setReservationDate(reservation.getStartDateTime().toLocalDate());
+
+        // Logique pour déterminer le timeSlot depuis l'heure de début
+        LocalTime startTime = reservation.getStartDateTime().toLocalTime();
+        String timeSlot = startTime.isBefore(LocalTime.of(13, 0)) ? "MORNING" : "AFTERNOON";
+        dto.setTimeSlot(timeSlot);
+
         dto.setStatus(reservation.getStatus().toString());
         dto.setCheckInTime(reservation.getCheckInTime());
         dto.setCreatedAt(reservation.getCreatedAt());

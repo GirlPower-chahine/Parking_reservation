@@ -34,8 +34,8 @@ public class ParkingSpotService {
                 .map(spot -> {
                     ParkingSpotAvailabilityDTO dto = new ParkingSpotAvailabilityDTO();
                     dto.setSpotId(spot.getSpotId());
-                    dto.setRow(spot.getRow());
-                    dto.setNumber(spot.getNumber());
+                    dto.setRowIdentifier(spot.getRowIdentifier());
+                    dto.setSpotNumber(spot.getSpotNumber());
                     dto.setHasElectricCharger(spot.getHasElectricCharger());
 
                     Reservation reservation = reservationMap.get(spot.getSpotId());

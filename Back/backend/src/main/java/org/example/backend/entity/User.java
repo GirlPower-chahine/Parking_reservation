@@ -29,11 +29,23 @@ public class User {
 
     private String role;
 
+    @Column(nullable = false) // Ajout du champ isActive
+    private Boolean isActive = true; // Statut actif/inactif de l'utilisateur
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @PrePersist
+    @Column(name = "updated_at", nullable = false) // Ajouté pour le suivi des modifications
+    private LocalDateTime updatedAt;
+
+    @PrePersist // Méthode appelée avant la persistance initiale
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now(); // Initialise aussi updatedAt à la création
+    }
+
+    @PreUpdate // Méthode appelée avant chaque mise à jour
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now(); // Met à jour updatedAt à chaque modification
     }
 }
