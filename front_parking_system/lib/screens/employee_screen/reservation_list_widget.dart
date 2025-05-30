@@ -64,39 +64,23 @@ class ReservationListView extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _StatCard(
-                        title: 'Total Places',
-                        value: totalPlaces.toString(),
-                        color: const Color(0xFF1E3A8A)),
-                    _StatCard(
-                        title: 'Disponibles',
-                        value: availablePlaces.toString(),
-                        color: Colors.green),
-                    _StatCard(
-                        title: 'Occupées',
-                        value: occupiedPlaces.toString(),
-                        color: Colors.orange),
+                    _StatCard(title: 'Total Places', value: totalPlaces.toString(), color: const Color(0xFF1E3A8A)),
+                    _StatCard(title: 'Disponibles', value: availablePlaces.toString(), color: Colors.green),
+                    _StatCard(title: 'Occupées', value: occupiedPlaces.toString(), color: Colors.orange),
                   ],
                 ),
               ),
               Expanded(
                 child: switch (state.status) {
                   ParkingStatus.initial => const SizedBox.shrink(),
-                  ParkingStatus.loading => const Center(
-                    child: CircularProgressIndicator(),
-                  ),
+                  ParkingStatus.loading => const Center(child: CircularProgressIndicator()),
                   ParkingStatus.error => Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          'Erreur : ${state.error}',
-                          style: const TextStyle(color: Colors.red),
-                        ),
+                        Text('Erreur : ${state.error}', style: const TextStyle(color: Colors.red)),
                         ElevatedButton(
-                          onPressed: () {
-                            context.read<ParkingBloc>().add(LoadParkingSpots());
-                          },
+                          onPressed: () => context.read<ParkingBloc>().add(LoadParkingSpots()),
                           child: const Text('Réessayer'),
                         ),
                       ],
@@ -128,11 +112,7 @@ class ReservationListView extends StatelessWidget {
                                 if (spot.hasElectricCharger)
                                   const Padding(
                                     padding: EdgeInsets.only(right: 8.0),
-                                    child: Icon(
-                                      Icons.electric_car,
-                                      color: Colors.blue,
-                                      size: 24,
-                                    ),
+                                    child: Icon(Icons.electric_car, color: Colors.blue, size: 24),
                                   ),
                                 IconButton(
                                   icon: const Icon(Icons.qr_code),
@@ -180,11 +160,15 @@ class ReservationListView extends StatelessWidget {
     );
   }
 
+
   void _showReservationPopup(String spotId, BuildContext context) async {
     DateTime selectedDate = DateTime.now();
     String selectedTimeSlot = 'MORNING';
-    bool needsCharge = false;
-    final parkingRepository = RepositoryProvider.of<ParkingRepository>(context);
+    // Récupérer la place de parking sélectionnée
+    final spot = context.read<ParkingBloc>().state.parkingSpots
+        .firstWhere((spot) => spot.spotId == spotId);
+    // La valeur needsCharge sera égale à hasElectricCharger de la place
+    final needsCharge = spot.hasElectricCharger;
 
     final currentUser = await LocalStorage.getUser();
     if (currentUser == null) {
@@ -194,11 +178,11 @@ class ReservationListView extends StatelessWidget {
       return;
     }
 
+    final parkingRepository = RepositoryProvider.of<ParkingRepository>(context);
+
     await showDialog(
       context: context,
       builder: (dialogContext) {
-        final parkingRepository = RepositoryProvider.of<ParkingRepository>(context);
-
         return BlocProvider(
           create: (_) => ReservationBloc(repository: parkingRepository),
           child: BlocConsumer<ReservationBloc, ReservationState>(
@@ -206,7 +190,10 @@ class ReservationListView extends StatelessWidget {
               if (state.status == ReservationStatus.success) {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Réservation effectuée avec succès')),
+                  SnackBar(
+                    content: Text('Réservation effectuée avec succès\nCode de confirmation : ${state.confirmationCode}'),
+                    duration: const Duration(seconds: 5),
+                  ),
                 );
               } else if (state.status == ReservationStatus.error) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -254,15 +241,17 @@ class ReservationListView extends StatelessWidget {
                             });
                           },
                         ),
-                        CheckboxListTile(
-                          title: const Text('Besoin de recharge électrique'),
-                          value: needsCharge,
-                          onChanged: (value) {
-                            setState(() {
-                              needsCharge = value!;
-                            });
-                          },
-                        ),
+                        if (spot.hasElectricCharger)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 8.0),
+                            child: Text(
+                              'Cette place est équipée d\'une borne de recharge',
+                              style: TextStyle(
+                                color: Colors.blue,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                     actions: [

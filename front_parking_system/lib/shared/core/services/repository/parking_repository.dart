@@ -24,9 +24,15 @@ class ParkingRepository {
     }
   }
 
-  Future<void> createReservation(String userId, ReservationRequestDTO request) async {
+  Future<String> createReservation(ReservationRequestDTO request) async {
     try {
-      await apiService.post('/reservations/admin/$userId', request.toJson());
+      final response = await apiService.post('/reservations', request.toJson());
+      if (response.statusCode == 200) {
+        final confirmationCode = response.data['confirmationCode'] as String;
+        return confirmationCode;
+      } else {
+        throw Exception('Échec de la création de la réservation');
+      }
     } catch (e) {
       rethrow;
     }

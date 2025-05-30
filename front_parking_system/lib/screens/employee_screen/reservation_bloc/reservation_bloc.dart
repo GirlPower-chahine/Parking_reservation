@@ -18,8 +18,7 @@ class ReservationBloc extends Bloc<ReservationEvent, ReservationState> {
       ) async {
     emit(state.copyWith(status: ReservationStatus.loading));
     try {
-      await repository.createReservation(
-        event.userId,
+      final confirmationCode = await repository.createReservation(
         ReservationRequestDTO(
           reservationDate: event.date,
           timeSlot: event.timeSlot,
@@ -27,7 +26,10 @@ class ReservationBloc extends Bloc<ReservationEvent, ReservationState> {
           needsElectricCharge: event.needsElectricCharge,
         ),
       );
-      emit(state.copyWith(status: ReservationStatus.success));
+      emit(state.copyWith(
+        status: ReservationStatus.success,
+        confirmationCode: confirmationCode,
+      ));
     } catch (e) {
       emit(state.copyWith(
         status: ReservationStatus.error,
