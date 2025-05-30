@@ -84,7 +84,7 @@ docker compose up --build -d
 #3. Aller sur l'URL localhost:3000.
 
  IMPORTANT : Pour des raisons de sécurité, Google Chrome empêche les appels API.
-Il faut l'ouvrir avec cette commande :
+ Il faut l'ouvrir avec cette commande :
  open -n -a /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --args --user-data-dir="/tmp/chrome-dev" --disable-web-security
 
 
