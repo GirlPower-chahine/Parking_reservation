@@ -21,7 +21,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, UUID> 
     @Query("SELECT r FROM Reservation r WHERE r.user.userId = :userId")
     List<Reservation> findAllReservationsByUser(@Param("userId") UUID userId);
 
-    // Mise à jour pour utiliser startDateTime et endDateTime
     @Query("SELECT COUNT(r) FROM Reservation r WHERE r.user.userId = :userId " +
             "AND DATE(r.startDateTime) >= :startDate AND DATE(r.startDateTime) <= :endDate " +
             "AND r.status = 'ACTIVE'")
@@ -34,7 +33,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, UUID> 
             "AND r.status = 'ACTIVE' AND r.checkInTime IS NULL")
     List<Reservation> findReservationsNeedingCheckIn(@Param("date") LocalDate date);
 
-    // Mise à jour pour utiliser startDateTime
     @Query("SELECT r FROM Reservation r WHERE DATE(r.startDateTime) = :date " +
             "AND ((:timeSlot = 'MORNING' AND HOUR(r.startDateTime) < 12) " +
             "OR (:timeSlot = 'AFTERNOON' AND HOUR(r.startDateTime) >= 12)) " +
@@ -42,7 +40,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, UUID> 
     List<Reservation> findActiveReservationsByDateAndTimeSlot(@Param("date") LocalDate date,
                                                               @Param("timeSlot") String timeSlot);
 
-    // Mise à jour pour utiliser startDateTime
     @Query("SELECT r FROM Reservation r WHERE r.parkingSpot.spotId = :spotId " +
             "AND DATE(r.startDateTime) = :date " +
             "AND ((:timeSlot = 'MORNING' AND HOUR(r.startDateTime) < 12) " +

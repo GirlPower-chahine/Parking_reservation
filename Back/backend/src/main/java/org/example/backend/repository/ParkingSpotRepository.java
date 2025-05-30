@@ -16,7 +16,6 @@ public interface ParkingSpotRepository extends JpaRepository<ParkingSpot, String
     @Query("SELECT ps FROM ParkingSpot ps WHERE ps.hasElectricCharger = true")
     List<ParkingSpot> findElectricChargingSpots();
 
-    // Mise à jour pour utiliser startDateTime et endDateTime
     @Query("SELECT ps FROM ParkingSpot ps WHERE ps.spotId NOT IN " +
             "(SELECT r.parkingSpot.spotId FROM Reservation r " +
             "WHERE DATE(r.startDateTime) = :date " +
