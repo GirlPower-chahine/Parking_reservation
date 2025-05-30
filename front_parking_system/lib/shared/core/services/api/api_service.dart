@@ -45,4 +45,8 @@ class ApiService {
   void setAuthToken(String token) {
     dio.options.headers['Authorization'] = 'Bearer $token';
   }
+
+  void clearAuthToken() {
+    dio.options.headers.remove('Authorization');
+  }
 }

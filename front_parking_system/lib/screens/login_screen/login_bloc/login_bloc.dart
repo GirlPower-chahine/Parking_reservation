@@ -1,5 +1,4 @@
 import 'package:bloc/bloc.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:meta/meta.dart';
 
 import '../../../../shared/core/models/user.dart';
@@ -53,21 +52,47 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     }
   }
 
-
   Future<void> _onCheckAuthStatus(
-    CheckAuthStatus event,
-    Emitter<LoginState> emit,
-  ) async {
-    // TODO: Implémenter la vérification du statut d'authentification
+      CheckAuthStatus event,
+      Emitter<LoginState> emit,
+      ) async {
+    emit(state.copyWith(status: LoginStatus.loading));
+
+    try {
+      final token = await LocalStorage.getToken();
+      final user = await LocalStorage.getUser();
+
+      if (token != null && user != null) {
+        emit(state.copyWith(
+          status: LoginStatus.success,
+          token: token,
+          user: user,
+        ));
+      } else {
+        emit(state.copyWith(status: LoginStatus.initial));
+      }
+    } catch (e) {
+      emit(state.copyWith(
+        status: LoginStatus.error,
+        exception: AppException(e.toString()),
+      ));
+    }
   }
 
   Future<void> _onLogoutRequested(
       LogoutRequested event,
       Emitter<LoginState> emit,
       ) async {
-    final storage = FlutterSecureStorage();
-    await storage.deleteAll();
+    emit(state.copyWith(status: LoginStatus.loading));
 
-    emit(LoginState());
+    try {
+      await LocalStorage.clearAll();
+      emit(LoginState());
+    } catch (e) {
+      emit(state.copyWith(
+        status: LoginStatus.error,
+        exception: AppException('Erreur lors de la déconnexion: ${e.toString()}'),
+      ));
+    }
   }
 }
