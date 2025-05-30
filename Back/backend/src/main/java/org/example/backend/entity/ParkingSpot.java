@@ -1,45 +1,29 @@
 package org.example.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-
-import java.time.LocalDateTime;
+import lombok.Data;
 
 @Entity
-@Table(name = "PARKING_SPOTS")
+@Table(name = "parking_spots")
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class ParkingSpot {
-    @Id
-    @Column(name = "spot_id", length = 3)
-    private String spotId; // A01, A02, ..., F10
 
-    @Column(name = "`row`", nullable = false, length = 1)
+    @Id
+    private String spotId; // Format: A01, B02, etc.
+
+    @Column(nullable = false)
     private String rowIdentifier; // A, B, C, D, E, F
 
-    @Column(name = "number", nullable = false)
+    @Column(nullable = false)
     private Integer spotNumber; // 1-10
 
     @Column(nullable = false)
-    private Boolean hasElectricCharger; // true pour rows A et F
+    private Boolean hasElectricCharger;
 
     @Column(nullable = false)
     private Boolean isAvailable = true;
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
+    // Verrouillage optimiste
+    @Version
+    private Long version;
 }

@@ -1,17 +1,18 @@
 package org.example.backend.controller;
 
-import org.example.backend.dto.CheckInDTO;
-import org.example.backend.dto.ReservationDTO;
-import org.example.backend.dto.ReservationResponseDTO;
-import org.example.backend.entity.User;
-import org.example.backend.repository.UserRepository;
+import org.example.backend.dto.*;
 import org.example.backend.service.ReservationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,119 +22,142 @@ import java.util.UUID;
 public class ReservationController {
 
     private final ReservationService reservationService;
-    private final UserRepository userRepository;
-
 
     @PostMapping
-    public ResponseEntity<ReservationResponseDTO> createReservation(@RequestBody ReservationDTO dto) {
-        UUID userId = getCurrentUserId();
+    @PreAuthorize("hasAnyRole('EMPLOYEE', 'SECRETARY', 'MANAGER')")
+    public ResponseEntity<List<ReservationResponseDTO>> createReservation(
+            @Valid @RequestBody ReservationDTO dto,
+            @AuthenticationPrincipal UserDetails userDetails) {
 
-        if (dto.getSpotId() != null) {
-            ReservationResponseDTO reservation = reservationService.createReservationWithSpecificSpot(userId, dto);
-            return ResponseEntity.ok(reservation);
-        } else {
-            ReservationResponseDTO reservation = reservationService.createReservation(userId, dto);
-            return ResponseEntity.ok(reservation);
-        }
+        UUID userId = getUserIdFromUsername(userDetails.getUsername());
+        List<ReservationResponseDTO> reservations = reservationService.createReservation(userId, dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(reservations);
+    }
+
+    @PostMapping("/user/{targetUserId}")
+    @PreAuthorize("hasRole('SECRETARY')")
+    public ResponseEntity<List<ReservationResponseDTO>> createReservationForUser(
+            @PathVariable UUID targetUserId,
+            @Valid @RequestBody ReservationDTO dto) {
+
+        List<ReservationResponseDTO> reservations = reservationService.createReservation(targetUserId, dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(reservations);
     }
 
     @GetMapping("/my")
-    public ResponseEntity<List<ReservationResponseDTO>> getMyReservations() {
-        UUID userId = getCurrentUserId();
-        List<ReservationResponseDTO> reservations = reservationService.getUserReservations(userId);
+    @PreAuthorize("hasAnyRole('EMPLOYEE', 'SECRETARY', 'MANAGER')")
+    public ResponseEntity<List<ReservationResponseDTO>> getMyReservations(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
+        UUID userId = getUserIdFromUsername(userDetails.getUsername());
+        List<ReservationResponseDTO> reservations = startDate != null && endDate != null ?
+                reservationService.getUserReservationsByDateRange(userId, startDate, endDate) :
+                reservationService.getUserReservations(userId);
         return ResponseEntity.ok(reservations);
     }
 
     @GetMapping("/my/active")
-    public ResponseEntity<List<ReservationResponseDTO>> getMyActiveReservations() {
-        UUID userId = getCurrentUserId();
+    @PreAuthorize("hasAnyRole('EMPLOYEE', 'SECRETARY', 'MANAGER')")
+    public ResponseEntity<List<ReservationResponseDTO>> getMyActiveReservations(
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        UUID userId = getUserIdFromUsername(userDetails.getUsername());
         List<ReservationResponseDTO> reservations = reservationService.getUserActiveReservations(userId);
         return ResponseEntity.ok(reservations);
     }
 
-    @DeleteMapping("/{reservationId}")
-    public ResponseEntity<Void> cancelReservation(@PathVariable UUID reservationId) {
-        UUID userId = getCurrentUserId();
-        reservationService.cancelReservation(userId, reservationId);
-        return ResponseEntity.noContent().build();
-    }
-
-    @PostMapping("/checkin")
-    public ResponseEntity<ReservationResponseDTO> checkIn(@RequestBody CheckInDTO dto) {
-        UUID userId = getCurrentUserId();
-        ReservationResponseDTO reservation = reservationService.checkIn(userId, dto);
-        return ResponseEntity.ok(reservation);
-    }
-
-    @PostMapping("/admin/{targetUserId}")
-    public ResponseEntity<ReservationResponseDTO> createReservationForUser(
+    @GetMapping("/user/{targetUserId}")
+    @PreAuthorize("hasRole('SECRETARY') or (hasAnyRole('EMPLOYEE', 'MANAGER') and #targetUserId == authentication.principal.userId)")
+    public ResponseEntity<List<ReservationResponseDTO>> getUserReservations(
             @PathVariable UUID targetUserId,
-            @RequestBody ReservationDTO dto) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
 
-        // Vérifier que l'utilisateur connecté est une secrétaire
-        requireSecretaryRole();
-
-        ReservationResponseDTO reservation = reservationService.createReservation(targetUserId, dto);
-        return ResponseEntity.ok(reservation);
-    }
-
-    @GetMapping("/admin/{targetUserId}")
-    public ResponseEntity<List<ReservationResponseDTO>> getUserReservations(@PathVariable UUID targetUserId) {
-        requireSecretaryRole();
-
-        List<ReservationResponseDTO> reservations = reservationService.getUserReservations(targetUserId);
+        List<ReservationResponseDTO> reservations = startDate != null && endDate != null ?
+                reservationService.getUserReservationsByDateRange(targetUserId, startDate, endDate) :
+                reservationService.getUserReservations(targetUserId);
         return ResponseEntity.ok(reservations);
     }
 
-    @GetMapping("/admin/{targetUserId}/active")
-    public ResponseEntity<List<ReservationResponseDTO>> getUserActiveReservations(@PathVariable UUID targetUserId) {
-        requireSecretaryRole();
+    @GetMapping("/user/{targetUserId}/active")
+    @PreAuthorize("hasRole('SECRETARY') or (hasAnyRole('EMPLOYEE', 'MANAGER') and #targetUserId == authentication.principal.userId)")
+    public ResponseEntity<List<ReservationResponseDTO>> getUserActiveReservations(
+            @PathVariable UUID targetUserId) {
 
         List<ReservationResponseDTO> reservations = reservationService.getUserActiveReservations(targetUserId);
         return ResponseEntity.ok(reservations);
     }
 
-    @DeleteMapping("/admin/{targetUserId}/{reservationId}")
+    @DeleteMapping("/{reservationId}")
+    @PreAuthorize("hasAnyRole('EMPLOYEE', 'SECRETARY', 'MANAGER')")
+    public ResponseEntity<Void> cancelReservation(
+            @PathVariable UUID reservationId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        UUID userId = getUserIdFromUsername(userDetails.getUsername());
+        reservationService.cancelReservation(userId, reservationId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/group/{groupId}")
+    @PreAuthorize("hasAnyRole('EMPLOYEE', 'SECRETARY', 'MANAGER')")
+    public ResponseEntity<Void> cancelReservationGroup(
+            @PathVariable String groupId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        UUID userId = getUserIdFromUsername(userDetails.getUsername());
+        reservationService.cancelReservationGroup(userId, groupId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/user/{targetUserId}/{reservationId}")
+    @PreAuthorize("hasRole('SECRETARY')")
     public ResponseEntity<Void> cancelReservationForUser(
             @PathVariable UUID targetUserId,
             @PathVariable UUID reservationId) {
-
-        requireSecretaryRole();
 
         reservationService.cancelReservation(targetUserId, reservationId);
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/admin/{targetUserId}/checkin")
+    @PostMapping("/checkin")
+    @PreAuthorize("hasAnyRole('EMPLOYEE', 'SECRETARY', 'MANAGER')")
+    public ResponseEntity<ReservationResponseDTO> checkIn(
+            @Valid @RequestBody CheckInDTO dto,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        UUID userId = getUserIdFromUsername(userDetails.getUsername());
+        ReservationResponseDTO reservation = reservationService.checkIn(userId, dto);
+        return ResponseEntity.ok(reservation);
+    }
+
+    @PostMapping("/user/{targetUserId}/checkin")
+    @PreAuthorize("hasRole('SECRETARY')")
     public ResponseEntity<ReservationResponseDTO> checkInForUser(
             @PathVariable UUID targetUserId,
-            @RequestBody CheckInDTO dto) {
-
-        requireSecretaryRole();
+            @Valid @RequestBody CheckInDTO dto) {
 
         ReservationResponseDTO reservation = reservationService.checkIn(targetUserId, dto);
         return ResponseEntity.ok(reservation);
     }
 
-    private UUID getCurrentUserId() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
+    @GetMapping("/history")
+    @PreAuthorize("hasAnyRole('SECRETARY', 'MANAGER')")
+    public ResponseEntity<List<ReservationResponseDTO>> getAllReservationsHistory(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) String status) {
 
-        User user = userRepository.findByUsername(username);
-        if (user == null) {
-            throw new RuntimeException("Utilisateur non trouvé");
-        }
-
-        return user.getUserId();
+        List<ReservationResponseDTO> reservations = reservationService.getAllReservationsHistory(startDate, endDate, status);
+        return ResponseEntity.ok(reservations);
     }
 
-    private void requireSecretaryRole() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-
-        User user = userRepository.findByUsername(username);
-        if (user == null || !"SECRETARY".equals(user.getRole())) {
-            throw new RuntimeException("Accès refusé : rôle secrétaire requis");
-        }
+    // Méthode helper pour obtenir l'userId depuis le username
+    private UUID getUserIdFromUsername(String username) {
+        // Cette méthode devrait être implémentée dans un service
+        // Pour l'instant, elle est simplifiée
+        return reservationService.getUserIdByUsername(username);
     }
 }

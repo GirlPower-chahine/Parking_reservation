@@ -1,172 +1,200 @@
 package org.example.backend.service;
 
-import org.example.backend.dto.CheckInDTO;
-import org.example.backend.dto.ReservationDTO;
-import org.example.backend.dto.ReservationResponseDTO;
-import org.example.backend.entity.*;
-import org.example.backend.repository.ParkingSpotRepository;
-import org.example.backend.repository.ReservationRepository;
-import org.example.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.example.backend.dto.*;
+import org.example.backend.entity.*;
+import org.example.backend.exception.BusinessException;
+import org.example.backend.exception.ConcurrencyException;
+import org.example.backend.repository.*;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ReservationService {
 
     private final ReservationRepository reservationRepository;
     private final ParkingSpotRepository parkingSpotRepository;
     private final UserRepository userRepository;
+    private final EmailService emailService;
 
-    private ParkingSpot findAvailableSpot(ReservationDTO dto) {
+    @Transactional
+    public List<ReservationResponseDTO> createReservation(UUID userId, ReservationDTO dto) {
+        try {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new BusinessException("Utilisateur non trouvé"));
+
+            // Validation des dates et du rôle
+            validateReservationRequest(user, dto);
+
+            // Génération des dates de réservation (jours ouvrables uniquement)
+            List<LocalDate> workingDays = generateWorkingDays(dto.getStartDate(), dto.getEndDate());
+
+            // Groupe unique pour lier les réservations multi-jours
+            String groupId = UUID.randomUUID().toString();
+
+            List<ReservationResponseDTO> createdReservations = new ArrayList<>();
+
+            for (LocalDate date : workingDays) {
+                // Trouver une place disponible pour chaque jour
+                ParkingSpot spot = findAvailableSpot(date, dto);
+                if (spot == null) {
+                    throw new BusinessException(
+                            String.format("Aucune place disponible le %s", date)
+                    );
+                }
+
+                // Créer la réservation pour ce jour
+                Reservation reservation = createDayReservation(user, spot, date, dto, groupId);
+                Reservation saved = reservationRepository.save(reservation);
+                createdReservations.add(convertToResponseDTO(saved));
+
+                log.info("Réservation créée: {} pour {} le {}",
+                        saved.getReservationId(), user.getUsername(), date);
+            }
+
+            // Envoyer email de confirmation
+            emailService.sendReservationConfirmation(
+                    user.getUsername(),
+                    createdReservations.get(0).getSpotId(),
+                    dto.getStartDate().toString(),
+                    dto.getTimeSlot()
+            );
+
+            return createdReservations;
+
+        } catch (ObjectOptimisticLockingFailureException e) {
+            log.warn("Conflit de concurrence lors de la réservation", e);
+            throw new ConcurrencyException(
+                    "La place sélectionnée n'est plus disponible. Veuillez réessayer."
+            );
+        }
+    }
+
+    private void validateReservationRequest(User user, ReservationDTO dto) {
+        LocalDate today = LocalDate.now();
+
+        if (dto.getStartDate().isBefore(today)) {
+            throw new BusinessException("La date de début ne peut pas être dans le passé");
+        }
+
+        if (dto.getEndDate().isBefore(dto.getStartDate())) {
+            throw new BusinessException("La date de fin doit être après la date de début");
+        }
+
+        long daysBetween = dto.getStartDate().datesUntil(dto.getEndDate().plusDays(1)).count();
+
+        if ("EMPLOYEE".equals(user.getRole()) && daysBetween > 5) {
+            throw new BusinessException("Les employés ne peuvent réserver que 5 jours maximum");
+        }
+
+        if ("MANAGER".equals(user.getRole()) && daysBetween > 30) {
+            throw new BusinessException("Les managers ne peuvent réserver que 30 jours maximum");
+        }
+
+        // Vérifier le nombre de réservations actives
+        long activeReservations = reservationRepository.countActiveReservationsInPeriod(
+                user.getUserId(), today, dto.getEndDate()
+        );
+
+        if ("EMPLOYEE".equals(user.getRole()) && activeReservations + daysBetween > 5) {
+            throw new BusinessException("Limite de 5 réservations actives atteinte");
+        }
+    }
+
+    private List<LocalDate> generateWorkingDays(LocalDate start, LocalDate end) {
+        return start.datesUntil(end.plusDays(1))
+                .filter(date -> date.getDayOfWeek() != DayOfWeek.SATURDAY
+                        && date.getDayOfWeek() != DayOfWeek.SUNDAY)
+                .collect(Collectors.toList());
+    }
+
+    private ParkingSpot findAvailableSpot(LocalDate date, ReservationDTO dto) {
         List<ParkingSpot> availableSpots;
 
         if (dto.getNeedsElectricCharger()) {
-            availableSpots = parkingSpotRepository.findAvailableElectricSpots(
-                    dto.getReservationDate(), dto.getTimeSlot());
+            availableSpots = parkingSpotRepository.findAvailableElectricSpots(date, dto.getTimeSlot());
         } else {
-            availableSpots = parkingSpotRepository.findAvailableSpots(
-                    dto.getReservationDate(), dto.getTimeSlot());
+            availableSpots = parkingSpotRepository.findAvailableSpots(date, dto.getTimeSlot());
         }
 
         if (dto.getSpotId() != null) {
+            // Vérifier si la place demandée est disponible
             return availableSpots.stream()
                     .filter(spot -> spot.getSpotId().equals(dto.getSpotId()))
                     .findFirst()
                     .orElse(null);
         }
 
+        // Attribution automatique
         return availableSpots.isEmpty() ? null : availableSpots.get(0);
     }
 
-    @Transactional
-    public ReservationResponseDTO createReservation(UUID userId, ReservationDTO dto) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
-
-        validateReservationRules(user, dto);
-
-        ParkingSpot availableSpot = findAvailableSpot(dto);
-        if (availableSpot == null) {
-            throw new RuntimeException("Aucune place disponible pour cette date et créneau");
-        }
-
-        Reservation reservation = new Reservation();
-        reservation.setUser(user);
-        reservation.setParkingSpot(availableSpot);
-
-        LocalDateTime startTime = dto.getReservationDate().atTime(
-                "MORNING".equals(dto.getTimeSlot()) ? 8 : 14, 0);
-        LocalDateTime endTime = dto.getReservationDate().atTime(
-                "MORNING".equals(dto.getTimeSlot()) ? 12 : 18, 0);
-
-        reservation.setStartDateTime(startTime);
-        reservation.setEndDateTime(endTime);
-        reservation.setStatus(ReservationStatus.ACTIVE);
-
-        Reservation saved = reservationRepository.save(reservation);
-
-        return convertToResponseDTO(saved);
-    }
-
-    private void validateReservationRules(User user, ReservationDTO dto) {
-        if (dto.getReservationDate().isBefore(LocalDate.now())) {
-            throw new RuntimeException("Impossible de réserver dans le passé");
-        }
-
-        if ("EMPLOYEE".equals(user.getRole())) {
-            validateEmployeeRules(user.getUserId(), dto);
-        } else if ("MANAGER".equals(user.getRole())) {
-            validateManagerRules(user.getUserId(), dto);
-        }
-    }
-
-    private void validateEmployeeRules(UUID userId, ReservationDTO dto) {
-        LocalDate startDate = LocalDate.now();
-        LocalDate endDate = dto.getReservationDate();
-
-        long activeReservations = reservationRepository.countActiveReservationsInPeriod(
-                userId, startDate, endDate.plusDays(1));
-
-        if (activeReservations >= 5) {
-            throw new RuntimeException("Limite de 5 réservations atteinte");
-        }
-    }
-
-    private void validateManagerRules(UUID userId, ReservationDTO dto) {
-        LocalDate startDate = LocalDate.now();
-        LocalDate endDate = dto.getReservationDate();
-
-        if (endDate.isAfter(startDate.plusDays(30))) {
-            throw new RuntimeException("Les managers ne peuvent réserver que 30 jours à l'avance maximum");
-        }
-    }
-
-    @Transactional
-    public ReservationResponseDTO createReservationWithSpecificSpot(UUID userId, ReservationDTO dto) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
-
-        validateReservationRules(user, dto);
-
-        if (dto.getSpotId() == null) {
-            throw new RuntimeException("SpotId requis pour cette méthode");
-        }
-
-        ParkingSpot spot = parkingSpotRepository.findById(dto.getSpotId())
-                .orElseThrow(() -> new RuntimeException("Place de parking non trouvée"));
-
-        Reservation existingReservation = reservationRepository.findActiveReservationBySpotAndDateTime(
-                dto.getSpotId(), dto.getReservationDate(), dto.getTimeSlot());
-
-        if (existingReservation != null) {
-            throw new RuntimeException("Cette place est déjà réservée pour ce créneau");
-        }
-
-        if (dto.getNeedsElectricCharger() && !spot.getHasElectricCharger()) {
-            throw new RuntimeException("Cette place n'a pas de borne électrique");
-        }
-
+    private Reservation createDayReservation(User user, ParkingSpot spot,
+                                             LocalDate date, ReservationDTO dto, String groupId) {
         Reservation reservation = new Reservation();
         reservation.setUser(user);
         reservation.setParkingSpot(spot);
+        reservation.setGroupId(groupId);
 
-        LocalDateTime startTime = dto.getReservationDate().atTime(
-                "MORNING".equals(dto.getTimeSlot()) ? 8 : 14, 0);
-        LocalDateTime endTime = dto.getReservationDate().atTime(
-                "MORNING".equals(dto.getTimeSlot()) ? 12 : 18, 0);
+        LocalTime startTime = "MORNING".equals(dto.getTimeSlot()) ? LocalTime.of(8, 0) :
+                "AFTERNOON".equals(dto.getTimeSlot()) ? LocalTime.of(14, 0) :
+                        LocalTime.of(8, 0); // FULL_DAY
 
-        reservation.setStartDateTime(startTime);
-        reservation.setEndDateTime(endTime);
+        LocalTime endTime = "MORNING".equals(dto.getTimeSlot()) ? LocalTime.of(12, 0) :
+                "AFTERNOON".equals(dto.getTimeSlot()) ? LocalTime.of(18, 0) :
+                        LocalTime.of(18, 0); // FULL_DAY
+
+        reservation.setStartDateTime(date.atTime(startTime));
+        reservation.setEndDateTime(date.atTime(endTime));
         reservation.setStatus(ReservationStatus.ACTIVE);
 
-        Reservation saved = reservationRepository.save(reservation);
-        return convertToResponseDTO(saved);
+        return reservation;
     }
 
     @Transactional
     public void cancelReservation(UUID userId, UUID reservationId) {
         Reservation reservation = reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new RuntimeException("Réservation non trouvée"));
+                .orElseThrow(() -> new BusinessException("Réservation non trouvée"));
 
         if (!reservation.getUser().getUserId().equals(userId)) {
-            throw new RuntimeException("Vous ne pouvez annuler que vos propres réservations");
+            throw new BusinessException("Vous ne pouvez annuler que vos propres réservations");
         }
 
         if (reservation.getStatus() != ReservationStatus.ACTIVE) {
-            throw new RuntimeException("Cette réservation ne peut pas être annulée");
+            throw new BusinessException("Cette réservation ne peut pas être annulée");
         }
 
-        reservation.setStatus(ReservationStatus.CANCELLED);
+        reservation.setStatus(ReservationStatus.CANCELLED_BY_USER);
+        reservation.setCanceledAt(LocalDateTime.now());
         reservationRepository.save(reservation);
+
+        log.info("Réservation {} annulée par l'utilisateur", reservationId);
+    }
+
+    @Transactional
+    public void cancelReservationGroup(UUID userId, String groupId) {
+        List<Reservation> groupReservations = reservationRepository.findByGroupIdAndUserId(groupId, userId);
+
+        for (Reservation reservation : groupReservations) {
+            if (reservation.getStatus() == ReservationStatus.ACTIVE) {
+                reservation.setStatus(ReservationStatus.CANCELLED_BY_USER);
+                reservation.setCanceledAt(LocalDateTime.now());
+            }
+        }
+
+        reservationRepository.saveAll(groupReservations);
+        log.info("Groupe de réservations {} annulé", groupId);
     }
 
     @Transactional
@@ -180,34 +208,38 @@ public class ReservationService {
                 dto.getSpotId(), today, currentTimeSlot);
 
         if (reservation == null) {
-            throw new RuntimeException("Aucune réservation active trouvée pour cette place");
+            throw new BusinessException("Aucune réservation active trouvée pour cette place");
         }
 
         if (!reservation.getUser().getUserId().equals(userId)) {
-            throw new RuntimeException("Cette réservation ne vous appartient pas");
+            throw new BusinessException("Cette réservation ne vous appartient pas");
         }
 
         if (reservation.getCheckInTime() != null) {
-            throw new RuntimeException("Check-in déjà effectué");
+            throw new BusinessException("Check-in déjà effectué");
         }
 
         reservation.setCheckInTime(LocalDateTime.now());
         reservation.setStatus(ReservationStatus.CHECKED_IN);
 
         Reservation saved = reservationRepository.save(reservation);
+        log.info("Check-in effectué pour la réservation {}", saved.getReservationId());
+
         return convertToResponseDTO(saved);
     }
 
+    @Transactional(readOnly = true)
     public List<ReservationResponseDTO> getUserReservations(UUID userId) {
-        List<Reservation> reservations = reservationRepository.findAllReservationsByUser(userId);
-        return reservations.stream()
+        return reservationRepository.findAllReservationsByUser(userId)
+                .stream()
                 .map(this::convertToResponseDTO)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<ReservationResponseDTO> getUserActiveReservations(UUID userId) {
-        List<Reservation> reservations = reservationRepository.findActiveReservationsByUser(userId);
-        return reservations.stream()
+        return reservationRepository.findActiveReservationsByUser(userId)
+                .stream()
                 .map(this::convertToResponseDTO)
                 .collect(Collectors.toList());
     }
@@ -215,30 +247,68 @@ public class ReservationService {
     @Transactional
     public void expireReservationsAt11AM() {
         LocalDate today = LocalDate.now();
-        List<Reservation> reservationsToExpire = reservationRepository.findReservationsNeedingCheckIn(today);
+        List<Reservation> reservationsToExpire = reservationRepository
+                .findReservationsNeedingCheckIn(today);
+
+        log.info("Traitement de {} réservations non confirmées", reservationsToExpire.size());
 
         for (Reservation reservation : reservationsToExpire) {
             reservation.setStatus(ReservationStatus.EXPIRED);
+            reservation.setCanceledAt(LocalDateTime.now());
         }
 
         reservationRepository.saveAll(reservationsToExpire);
+
+        // Optionnel : envoyer des notifications
+        reservationsToExpire.forEach(r -> {
+            log.info("Réservation {} expirée pour non check-in", r.getReservationId());
+        });
+    }
+
+    // Ajouter dans ReservationService.java
+
+    public UUID getUserIdByUsername(String username) {
+        User user = userRepository.findByUsername(username);
+        if (user == null) {
+            throw new BusinessException("Utilisateur non trouvé: " + username);
+        }
+        return user.getUserId();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ReservationResponseDTO> getUserReservationsByDateRange(UUID userId, LocalDate startDate, LocalDate endDate) {
+        return reservationRepository.findReservationsByUserAndDateRange(userId, startDate, endDate)
+                .stream()
+                .map(this::convertToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<ReservationResponseDTO> getAllReservationsHistory(LocalDate startDate, LocalDate endDate, String status) {
+        return reservationRepository.findReservationsHistory(startDate, endDate, status)
+                .stream()
+                .map(this::convertToResponseDTO)
+                .collect(Collectors.toList());
     }
 
     private ReservationResponseDTO convertToResponseDTO(Reservation reservation) {
         ReservationResponseDTO dto = new ReservationResponseDTO();
         dto.setReservationId(reservation.getReservationId());
         dto.setSpotId(reservation.getParkingSpot().getSpotId());
-
         dto.setReservationDate(reservation.getStartDateTime().toLocalDate());
 
         LocalTime startTime = reservation.getStartDateTime().toLocalTime();
-        String timeSlot = startTime.isBefore(LocalTime.of(13, 0)) ? "MORNING" : "AFTERNOON";
+        String timeSlot = startTime.equals(LocalTime.of(8, 0)) &&
+                reservation.getEndDateTime().toLocalTime().equals(LocalTime.of(18, 0)) ? "FULL_DAY" :
+                startTime.isBefore(LocalTime.of(13, 0)) ? "MORNING" : "AFTERNOON";
         dto.setTimeSlot(timeSlot);
 
         dto.setStatus(reservation.getStatus().toString());
         dto.setCheckInTime(reservation.getCheckInTime());
         dto.setCreatedAt(reservation.getCreatedAt());
         dto.setUserName(reservation.getUser().getFirstName());
+        dto.setGroupId(reservation.getGroupId());
+
         return dto;
     }
 }

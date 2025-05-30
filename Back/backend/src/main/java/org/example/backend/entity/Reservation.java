@@ -1,20 +1,17 @@
-// src/main/java/org/example/backend.entity/Reservation.java
 package org.example.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "RESERVATIONS")
+@Table(name = "reservations")
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class Reservation {
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID reservationId;
@@ -28,32 +25,34 @@ public class Reservation {
     private ParkingSpot parkingSpot;
 
     @Column(nullable = false)
-    private LocalDateTime startDateTime; // Début de la période de réservation (permet plus de flexibilité que LocalDate + String)
+    private LocalDateTime startDateTime;
 
     @Column(nullable = false)
-    private LocalDateTime endDateTime; // Fin de la période de réservation (permet les durées de 5 jours, 1 mois, etc.)
+    private LocalDateTime endDateTime;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ReservationStatus status = ReservationStatus.ACTIVE;
 
-    @Column // peut être null si pas encore check-in
+    @Column
     private LocalDateTime checkInTime;
 
-    @Column(name = "created_at", nullable = false, updatable = false) // Horodatage de création
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false) // Horodatage de dernière modification
-    private LocalDateTime updatedAt;
+    @Column
+    private LocalDateTime canceledAt;
 
-    @PrePersist // Méthode appelée avant la première persistance de l'entité
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-    }
+    // Verrouillage optimiste
+    @Version
+    private Long version;
 
-    @PreUpdate // Méthode appelée avant chaque mise à jour de l'entité
-    protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
+    // Référence à la réservation parent pour les réservations multi-jours
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_reservation_id")
+    private Reservation parentReservation;
+
+    @Column
+    private String groupId; // Pour regrouper les réservations multi-jours
 }

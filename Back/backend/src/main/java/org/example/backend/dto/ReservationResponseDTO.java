@@ -16,4 +16,5 @@ public class ReservationResponseDTO {
     private LocalDateTime checkInTime;
     private LocalDateTime createdAt;
     private String userName;
+    private String groupId;
 }
