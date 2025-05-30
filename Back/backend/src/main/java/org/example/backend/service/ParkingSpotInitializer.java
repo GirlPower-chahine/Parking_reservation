@@ -26,8 +26,8 @@ public class ParkingSpotInitializer implements CommandLineRunner {
             for (int number = 1; number <= 10; number++) {
                 ParkingSpot spot = new ParkingSpot();
                 spot.setSpotId(row + String.format("%02d", number));
-                spot.setRow(row);
-                spot.setNumber(number);
+                spot.setRowIdentifier(row);
+                spot.setSpotNumber(number);
                 spot.setHasElectricCharger(row.equals("A") || row.equals("F"));
                 spot.setIsAvailable(true);
 
