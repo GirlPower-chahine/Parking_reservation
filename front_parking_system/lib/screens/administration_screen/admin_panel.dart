@@ -5,7 +5,7 @@ import '../../shared/core/services/repository/auth_repository.dart';
 import '../login_screen/login_bloc/login_bloc.dart';
 import '../login_screen/login_screen.dart';
 import 'add_user_screen.dart';
-import 'user_management_screen.dart';
+import 'users/user_management_screen.dart';
 
 class AdminPanel extends StatefulWidget {
   // final String token;
