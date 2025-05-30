@@ -82,3 +82,30 @@ cd parking-reservation
 docker compose up --build -d
 
 IDE : Android Studio
+````
+
+## 🔐 Comptes de test 
+
+Après le lancement de l'application, les comptes suivants sont automatiquement créés :
+
+### 👤 Employé
+- **Email :** `employee@test.com`
+- **Mot de passe :** `password123`
+- **Rôle :** Employee 
+
+### 👔 Manager
+- **Email :** `manager@test.com`
+- **Mot de passe :** `password123`
+- **Rôle :** Manager 
+
+### 📋 Secrétaire
+- **Email :** `secretary@test.com`
+- **Mot de passe :** `password123`
+- **Rôle :** Secretary 
+
+## 🧪 Test rapide
+
+1. **Lancer l'application :**
+   ```bash
+   docker compose up --build -d
+   ```
