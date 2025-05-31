@@ -85,8 +85,8 @@ class MyApp extends StatelessWidget {
   Widget _getInitialScreen() {
     if (token != null && role == 'SECRETARY') {
       return const AdminPanel();
-    } else if (token != null && role == 'EMPLOYEE') {
-      return const EmployeePanel();
+    } else if (token != null && (role == 'EMPLOYEE' || role == 'MANAGER')) {
+      return EmployeePanel(isManager: role == 'MANAGER');
     }
     return const LoginScreen();
   }

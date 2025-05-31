@@ -8,7 +8,12 @@ import '../../shared/core/services/api/api_service.dart';
 import '../../shared/core/services/repository/parking_repository.dart';
 
 class EmployeePanel extends StatefulWidget {
-  const EmployeePanel({super.key});
+  final bool isManager;
+
+  const EmployeePanel({
+    super.key,
+    this.isManager = false,
+  });
 
   @override
   State<EmployeePanel> createState() => _EmployeePanelState();
@@ -43,12 +48,13 @@ class _EmployeePanelState extends State<EmployeePanel> {
             },
           ),
           actions: [
-            IconButton(
-              icon: const Icon(Icons.analytics, color: Colors.white),
-              onPressed: () {
-                _showAnalytics();
-              },
-            ),
+            if (widget.isManager) // N'affiche le bouton analytics que pour les managers
+              IconButton(
+                icon: const Icon(Icons.analytics, color: Colors.white),
+                onPressed: () {
+                  _showAnalytics();
+                },
+              ),
             const SizedBox(width: 10),
             IconButton(
                 icon: const Icon(Icons.logout, color: Colors.white),
