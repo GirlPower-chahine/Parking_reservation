@@ -1,6 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../shared/core/models/reservation/reservation_history_dto.dart';
-import '../../../shared/core/services/repository/reservation_history_repository.dart';
+
+import '../../../../shared/core/models/reservation/reservation_history_dto.dart';
+import '../../../../shared/core/services/repository/reservation_history_repository.dart';
+
 
 part 'reservation_history_event.dart';
 part 'reservation_history_state.dart';

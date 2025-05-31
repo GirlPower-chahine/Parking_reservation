@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:parking_system/screens/employee_screen/reservation_bloc/reservation_bloc.dart';
-import 'package:parking_system/screens/employee_screen/reservation_list_bloc/reservation_list_bloc.dart';
-import '../../shared/core/models/reservation/reservation_dto.dart';
-import '../../shared/core/services/repository/parking_repository.dart';
+import 'package:parking_system/screens/employee_screen/my_reservations/reservation_bloc/reservation_bloc.dart';
+import '../../../shared/core/models/reservation/reservation_dto.dart';
+import '../../../shared/core/services/repository/parking_repository.dart';
+import '../reservations_list/reservation_list_bloc/reservation_list_bloc.dart';
 
 class ReservationScreen extends StatelessWidget {
   const ReservationScreen({super.key});

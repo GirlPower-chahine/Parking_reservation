@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../shared/core/models/reservation/reservation_request_dto.dart';
-import '../../../shared/core/services/repository/parking_repository.dart';
+import '../../../../shared/core/models/reservation/reservation_request_dto.dart';
+import '../../../../shared/core/services/repository/parking_repository.dart';
+
 
 part 'reservation_event.dart';
 part 'reservation_state.dart';

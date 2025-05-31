@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:parking_system/screens/employee_screen/reservation_screen.dart';
 import '../login_screen/login_bloc/login_bloc.dart';
 import '../login_screen/login_screen.dart';
-import '../employee_screen/reservation_list_widget.dart';
+import 'reservations_list/reservation_list_widget.dart';
 import '../../shared/core/services/api/api_service.dart';
 import '../../shared/core/services/repository/parking_repository.dart';
+import 'my_reservations/reservation_screen.dart';
 
 class EmployeePanel extends StatefulWidget {
   final bool isManager;

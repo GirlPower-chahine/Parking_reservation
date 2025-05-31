@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../shared/core/models/auth/register/register_dto.dart';
-import 'register_bloc/register_bloc.dart';
+import '../../../shared/core/models/auth/register/register_dto.dart';
+import '../register_bloc/register_bloc.dart';
 
 class AddUserScreen extends StatefulWidget {
   const AddUserScreen({super.key});

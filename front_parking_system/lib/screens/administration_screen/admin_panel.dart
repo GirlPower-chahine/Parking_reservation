@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:parking_system/screens/administration_screen/register_bloc/register_bloc.dart';
-import 'package:parking_system/screens/administration_screen/reservation_history_bloc/reservation_history_screen.dart';
+import 'package:parking_system/screens/administration_screen/reservation_history/reservation_history_screen.dart';
 import '../../shared/core/services/repository/auth_repository.dart';
 import '../login_screen/login_bloc/login_bloc.dart';
 import '../login_screen/login_screen.dart';
-import 'add_user_screen.dart';
+import 'users/add_user_screen.dart';
 import 'dashboard/dashboard_screen.dart';
 import 'users/user_management_screen.dart';
 import 'reservation_list_widget.dart';
