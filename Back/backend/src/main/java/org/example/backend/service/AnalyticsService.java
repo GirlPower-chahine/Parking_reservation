@@ -275,7 +275,7 @@ public class AnalyticsService {
         // Réservations complétées (check-in effectué ET créneau terminé)
         Long completedReservations = reservationRepository.countCompletedReservationsInPeriod(startDate, endDate);
 
-        // Réservations avec check-in mais pas encore terminées
+        // Réservations avec check-in
         Long checkedInReservations = reservationRepository.countCheckedInReservationsInPeriod(startDate, endDate);
 
         // Taux de complétion = réservations complètement terminées / total

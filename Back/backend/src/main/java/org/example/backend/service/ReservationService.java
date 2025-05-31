@@ -26,7 +26,7 @@ public class ReservationService {
     private final ReservationRepository reservationRepository;
     private final ParkingSpotRepository parkingSpotRepository;
     private final UserRepository userRepository;
-    private final EmailService emailService;
+    private final EmailQueueService emailQueueService;
 
     @Transactional
     public List<ReservationResponseDTO> createReservation(UUID userId, ReservationDTO dto) {
@@ -64,7 +64,7 @@ public class ReservationService {
             }
 
             // Envoyer email de confirmation
-            emailService.sendReservationConfirmation(
+            emailQueueService.queueReservationConfirmation(
                     user.getUsername(),
                     createdReservations.get(0).getSpotId(),
                     dto.getStartDate().toString(),
@@ -178,6 +178,12 @@ public class ReservationService {
         reservation.setStatus(ReservationStatus.CANCELLED_BY_USER);
         reservation.setCanceledAt(LocalDateTime.now());
         reservationRepository.save(reservation);
+
+        emailQueueService.queueReservationCancellation(
+                reservation.getUser().getUsername(),
+                reservation.getParkingSpot().getSpotId(),
+                reservation.getStartDateTime().toLocalDate().toString()
+        );
 
         log.info("Réservation {} annulée par l'utilisateur", reservationId);
     }
