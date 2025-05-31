@@ -3,12 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:parking_system/screens/administration_screen/register_bloc/register_bloc.dart';
 import 'package:parking_system/screens/administration_screen/reservation_history/reservation_history_screen.dart';
 import '../../shared/core/services/repository/auth_repository.dart';
+import '../employee_screen/reservations_list/reservation_list_widget.dart';
 import '../login_screen/login_bloc/login_bloc.dart';
 import '../login_screen/login_screen.dart';
 import 'users/add_user_screen.dart';
 import 'dashboard/dashboard_screen.dart';
 import 'users/user_management_screen.dart';
-import 'reservation_list_widget.dart';
 import '../../shared/core/services/api/api_service.dart';
 import '../../shared/core/services/repository/parking_repository.dart';
 
@@ -23,12 +23,11 @@ class _AdminPanelState extends State<AdminPanel> {
   int _selectedIndex = 0;
 
   final List<String> _titles = [
-    'Dashboard',              // Index 0
-    'Places de Parking',      // Index 1
-    'Réservations',          // Index 2
-    'Historique',            // Index 3
-    'Utilisateurs',          // Index 4
-    'Ajouter un utilisateur' // Index 5
+    'Dashboard',
+    'Places de Parking',
+    'Historique',
+    'Utilisateurs',
+    'Ajouter un utilisateur'
   ];
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -44,7 +43,7 @@ class _AdminPanelState extends State<AdminPanel> {
           backgroundColor: const Color(0xFF1E3A8A),
           elevation: 0,
           title: Text(
-            _titles[_selectedIndex], // ✅ Maintenant ça marche avec 6 titres
+            _titles[_selectedIndex],
             style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,
@@ -70,10 +69,9 @@ class _AdminPanelState extends State<AdminPanel> {
                   context.read<LoginBloc>().add(LogoutRequested());
                   Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(builder: (_) => const LoginScreen()),
-                        (route) => false,
+                    (route) => false,
                   );
-                }
-            ),
+                }),
             const SizedBox(width: 10),
           ],
         ),
@@ -97,10 +95,6 @@ class _AdminPanelState extends State<AdminPanel> {
             BottomNavigationBarItem(
               icon: Icon(Icons.local_parking),
               label: 'Places',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.event_seat),
-              label: 'Réservations',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.history),
@@ -127,12 +121,10 @@ class _AdminPanelState extends State<AdminPanel> {
       case 1:
         return _buildParkingSpotsScreen();
       case 2:
-        return _buildReservationsScreen();
-      case 3:
         return const ReservationHistoryScreen();
-      case 4:
+      case 3:
         return _buildUsersScreen();
-      case 5:
+      case 4:
         return _buildAddUserScreen();
       default:
         return const Center(child: Text('Écran non trouvé'));
@@ -141,49 +133,6 @@ class _AdminPanelState extends State<AdminPanel> {
 
   Widget _buildParkingSpotsScreen() {
     return const ReservationListWidget();
-  }
-
-  Widget _buildReservationsScreen() {
-    return Container(
-      color: Colors.grey[100],
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: 8,
-        itemBuilder: (context, index) {
-          final reservations = [
-            {'user': 'Alice Martin', 'spot': 'A01', 'time': '09:00 - 17:00'},
-            {'user': 'Bob Dupont', 'spot': 'B03', 'time': '08:30 - 16:30'},
-            {'user': 'Claire Leroy', 'spot': 'C02', 'time': '10:00 - 18:00'},
-            {'user': 'David Chen', 'spot': 'A05', 'time': '07:45 - 15:45'},
-            {'user': 'Emma Wilson', 'spot': 'D01', 'time': '09:15 - 17:15'},
-            {'user': 'Frank Miller', 'spot': 'B07', 'time': '08:00 - 16:00'},
-            {'user': 'Grace Kim', 'spot': 'E03', 'time': '10:30 - 18:30'},
-            {'user': 'Henry Brown', 'spot': 'C06', 'time': '09:30 - 17:30'},
-          ];
-
-          final reservation = reservations[index];
-
-          return Card(
-            margin: const EdgeInsets.only(bottom: 8),
-            child: ListTile(
-              leading: const CircleAvatar(
-                backgroundColor: Color(0xFF1E3A8A),
-                child: Icon(Icons.person, color: Colors.white),
-              ),
-              title: Text(reservation['user']!),
-              subtitle: Text('Place ${reservation['spot']} • ${reservation['time']}'),
-              trailing: PopupMenuButton(
-                itemBuilder: (context) => [
-                  const PopupMenuItem(value: 'edit', child: Text('Modifier')),
-                  const PopupMenuItem(value: 'cancel', child: Text('Annuler')),
-                ],
-                onSelected: (value) => _handleReservationAction(value, reservation['user']!),
-              ),
-            ),
-          );
-        },
-      ),
-    );
   }
 
   Widget _buildAddUserScreen() {
@@ -216,7 +165,8 @@ class _AdminPanelState extends State<AdminPanel> {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.local_parking, color: Color(0xFF1E3A8A)),
+                  child:
+                      const Icon(Icons.local_parking, color: Color(0xFF1E3A8A)),
                 ),
                 const SizedBox(width: 15),
                 const Text(
@@ -269,14 +219,12 @@ class _AdminPanelState extends State<AdminPanel> {
               ),
             ),
             const SizedBox(height: 10),
-
             _buildMenuItem(Icons.dashboard, 'Dashboard', 0),
-            _buildMenuItem(Icons.local_parking, 'Places de Parking', 1, badge: 60),
-            _buildMenuItem(Icons.event_seat, 'Réservations', 2, badge: 18),
+            _buildMenuItem(Icons.local_parking, 'Places de Parking', 1,
+                badge: 60),
             _buildMenuItem(Icons.history, 'Historique', 3, badge: 250),
             _buildMenuItem(Icons.people, 'Utilisateurs', 4, badge: 12),
             _buildMenuItem(Icons.person_add, 'Ajouter un utilisateur', 5),
-
             const Spacer(),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
@@ -284,7 +232,8 @@ class _AdminPanelState extends State<AdminPanel> {
                 children: [
                   CircleAvatar(
                     backgroundColor: Colors.white.withOpacity(0.2),
-                    child: const Text('AD', style: TextStyle(color: Colors.white)),
+                    child:
+                        const Text('AD', style: TextStyle(color: Colors.white)),
                   ),
                   const SizedBox(width: 15),
                   const Column(
@@ -328,11 +277,12 @@ class _AdminPanelState extends State<AdminPanel> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white.withOpacity(0.2) : Colors.transparent,
+          color:
+              isSelected ? Colors.white.withOpacity(0.2) : Colors.transparent,
           border: isSelected
               ? const Border(
-            left: BorderSide(color: Colors.white, width: 3),
-          )
+                  left: BorderSide(color: Colors.white, width: 3),
+                )
               : null,
         ),
         child: Row(
@@ -349,7 +299,8 @@ class _AdminPanelState extends State<AdminPanel> {
             const Spacer(),
             if (badge != null)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
@@ -394,12 +345,6 @@ class _AdminPanelState extends State<AdminPanel> {
   void _showAnalytics() {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Analytics à venir...')),
-    );
-  }
-
-  void _handleReservationAction(String action, String userName) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$action pour $userName')),
     );
   }
 }

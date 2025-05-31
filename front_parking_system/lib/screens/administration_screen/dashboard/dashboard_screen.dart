@@ -67,7 +67,6 @@ class _DashboardViewState extends State<DashboardView> {
                     children: [
                       _buildOverviewTab(state),
                       _buildAnalyticsTab(state),
-                      _buildReportsTab(state),
                     ],
                   ),
                 ),
@@ -103,17 +102,13 @@ class _DashboardViewState extends State<DashboardView> {
               context.read<DashboardBloc>().add(RefreshDashboard());
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.date_range, color: Color(0xFF1E3A8A)),
-            onPressed: () => _showDateRangePicker(),
-          ),
         ],
       ),
     );
   }
 
   Widget _buildTabBar() {
-    final tabs = ['Vue d\'ensemble', 'Analytics', 'Rapports'];
+    final tabs = ['Vue d\'ensemble', 'Analytics'];
 
     return Container(
       height: 50,
@@ -150,7 +145,7 @@ class _DashboardViewState extends State<DashboardView> {
                     style: TextStyle(
                       color: isSelected ? const Color(0xFF1E3A8A) : Colors.grey,
                       fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.normal,
+                      isSelected ? FontWeight.bold : FontWeight.normal,
                       fontSize: 14,
                     ),
                   ),
@@ -171,6 +166,8 @@ class _DashboardViewState extends State<DashboardView> {
           _buildQuickStats(state),
           const SizedBox(height: 16),
           _buildUsageByDay(state),
+          const SizedBox(height: 16),
+          _buildUpcomingReservations(state),
         ],
       ),
     );
@@ -190,8 +187,7 @@ class _DashboardViewState extends State<DashboardView> {
                 '${summary?.totalReservations ?? 0}',
                 Icons.event_seat,
                 Colors.blue,
-                subtitle:
-                    'Ce mois: ${monthly?.totalReservationsThisMonth ?? 0}',
+                subtitle: 'Ce mois: ${monthly?.totalReservationsThisMonth ?? 0}',
               ),
             ),
             const SizedBox(width: 12),
@@ -215,8 +211,7 @@ class _DashboardViewState extends State<DashboardView> {
                 '${summary?.noShows ?? 0}',
                 Icons.warning,
                 Colors.orange,
-                subtitle:
-                    'Taux: ${(monthly?.noShowRate ?? 0).toStringAsFixed(1)}%',
+                subtitle: 'Taux: ${(monthly?.noShowRate ?? 0).toStringAsFixed(1)}%',
               ),
             ),
             const SizedBox(width: 12),
@@ -236,12 +231,12 @@ class _DashboardViewState extends State<DashboardView> {
   }
 
   Widget _buildStatCard(
-    String title,
-    String value,
-    IconData icon,
-    Color color, {
-    String? subtitle,
-  }) {
+      String title,
+      String value,
+      IconData icon,
+      Color color, {
+        String? subtitle,
+      }) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -307,11 +302,29 @@ class _DashboardViewState extends State<DashboardView> {
 
   Widget _buildUsageByDay(DashboardState state) {
     final usageByDay = state.summary?.usageByDayOfWeek ?? {};
-    final maxUsage =
-        usageByDay.values.fold(0, (max, value) => value > max ? value : max);
+    final maxUsage = usageByDay.values.fold(0, (max, value) => value > max ? value : max);
 
     if (usageByDay.isEmpty) {
-      return const SizedBox.shrink();
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 4,
+            ),
+          ],
+        ),
+        child: const Center(
+          child: Text(
+            'Aucune donnée d\'utilisation disponible',
+            style: TextStyle(color: Colors.grey),
+          ),
+        ),
+      );
     }
 
     return Container(
@@ -400,6 +413,162 @@ class _DashboardViewState extends State<DashboardView> {
     );
   }
 
+  Widget _buildUpcomingReservations(DashboardState state) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 4,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.schedule, color: Color(0xFF1E3A8A)),
+              const SizedBox(width: 8),
+              const Text(
+                'Réservations à Venir',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Spacer(),
+              TextButton(
+                onPressed: () => _loadFutureReservations(),
+                child: const Text('Voir plus'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          _buildUpcomingReservationCard(
+            'Place B07',
+            'Sarah',
+            '18/07/2025',
+            'A-midi',
+            Colors.blue,
+          ),
+          const SizedBox(height: 8),
+          _buildUpcomingReservationCard(
+            'Place B01',
+            'Sarah',
+            '15/08/2025',
+            'A-midi',
+            Colors.green,
+          ),
+
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue[50],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.blue[200]!),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.info, color: Colors.blue[600], size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Vous avez 2 réservations planifiées pour les mois à venir',
+                    style: TextStyle(
+                      color: Colors.blue[700],
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUpcomingReservationCard(
+      String place,
+      String user,
+      String date,
+      String period,
+      Color color,
+      ) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: const Icon(
+              Icons.local_parking,
+              color: Colors.white,
+              size: 16,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  place,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+                ),
+                Text(
+                  user,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                date,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Text(
+                period,
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: Colors.grey,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildAnalyticsTab(DashboardState state) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -410,6 +579,8 @@ class _DashboardViewState extends State<DashboardView> {
           _buildHistoricalChart(state),
           const SizedBox(height: 16),
           _buildElectricChargerStats(state),
+          const SizedBox(height: 16),
+          _buildParkingSpotAnalytics(state),
         ],
       ),
     );
@@ -481,8 +652,7 @@ class _DashboardViewState extends State<DashboardView> {
     );
   }
 
-  Widget _buildTrendCard(
-      String title, String value, IconData icon, Color color) {
+  Widget _buildTrendCard(String title, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -553,11 +723,11 @@ class _DashboardViewState extends State<DashboardView> {
             height: 200,
             child: historical.isEmpty
                 ? const Center(
-                    child: Text(
-                      'Aucune donnée historique disponible',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  )
+              child: Text(
+                'Aucune donnée historique disponible',
+                style: TextStyle(color: Colors.grey),
+              ),
+            )
                 : _buildSimpleLineChart(historical),
           ),
         ],
@@ -568,8 +738,15 @@ class _DashboardViewState extends State<DashboardView> {
   Widget _buildSimpleLineChart(List<HistoricalAnalyticsDTO> data) {
     if (data.isEmpty) return const SizedBox.shrink();
 
-    final maxReservations =
-        data.map((e) => e.totalReservations).reduce((a, b) => a > b ? a : b);
+    final maxReservations = data.map((e) => e.totalReservations).reduce((a, b) => a > b ? a : b);
+    if (maxReservations == 0) {
+      return const Center(
+        child: Text(
+          'Aucune réservation dans la période',
+          style: TextStyle(color: Colors.grey),
+        ),
+      );
+    }
 
     return CustomPaint(
       size: const Size(double.infinity, 200),
@@ -645,88 +822,8 @@ class _DashboardViewState extends State<DashboardView> {
                     value: chargerUsage / 100,
                     strokeWidth: 8,
                     backgroundColor: Colors.grey[300],
-                    valueColor:
-                        const AlwaysStoppedAnimation<Color>(Color(0xFF1E3A8A)),
+                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF1E3A8A)),
                   ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildReportsTab(DashboardState state) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          _buildExportOptions(state),
-          const SizedBox(height: 16),
-          _buildParkingSpotAnalytics(state),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildExportOptions(DashboardState state) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 4,
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Icon(Icons.file_download, color: Color(0xFF1E3A8A)),
-              SizedBox(width: 8),
-              Text(
-                'Exporter les Rapports',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed:
-                      state.isExporting ? null : () => _exportReport('monthly'),
-                  icon: state.isExporting
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.calendar_month),
-                  label: const Text('Rapport Mensuel'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1E3A8A),
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => _exportReport('custom'),
-                  icon: const Icon(Icons.date_range),
-                  label: const Text('Période Personnalisée'),
                 ),
               ),
             ],
@@ -843,8 +940,7 @@ class _DashboardViewState extends State<DashboardView> {
     );
   }
 
-  Widget _buildSpotStatCard(
-      String title, String value, IconData icon, Color color) {
+  Widget _buildSpotStatCard(String title, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -905,79 +1001,30 @@ class _DashboardViewState extends State<DashboardView> {
     );
   }
 
-  // Méthodes utilitaires
   List<String> _getDayOrder() {
-    return [
-      'MONDAY',
-      'TUESDAY',
-      'WEDNESDAY',
-      'THURSDAY',
-      'FRIDAY',
-      'SATURDAY',
-      'SUNDAY'
-    ];
+    return ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
   }
 
   String _getDayAbbreviation(String day) {
     switch (day) {
-      case 'MONDAY':
-        return 'Lun';
-      case 'TUESDAY':
-        return 'Mar';
-      case 'WEDNESDAY':
-        return 'Mer';
-      case 'THURSDAY':
-        return 'Jeu';
-      case 'FRIDAY':
-        return 'Ven';
-      case 'SATURDAY':
-        return 'Sam';
-      case 'SUNDAY':
-        return 'Dim';
-      default:
-        return day.substring(0, 3);
+      case 'MONDAY': return 'Lun';
+      case 'TUESDAY': return 'Mar';
+      case 'WEDNESDAY': return 'Mer';
+      case 'THURSDAY': return 'Jeu';
+      case 'FRIDAY': return 'Ven';
+      case 'SATURDAY': return 'Sam';
+      case 'SUNDAY': return 'Dim';
+      default: return day.substring(0, 3);
     }
   }
 
-  void _showDateRangePicker() async {
-    final DateTimeRange? picked = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-      initialDateRange: DateTimeRange(
-        start: DateTime.now().subtract(const Duration(days: 30)),
-        end: DateTime.now(),
+  void _loadFutureReservations() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Fonctionnalité à implémenter: voir toutes les réservations futures'),
+        duration: Duration(seconds: 2),
       ),
     );
-
-    if (picked != null) {
-      context.read<DashboardBloc>().add(
-            SelectDateRange(
-              startDate: picked.start,
-              endDate: picked.end,
-            ),
-          );
-    }
-  }
-
-  void _exportReport(String type) {
-    final now = DateTime.now();
-    String startDate, endDate;
-
-    if (type == 'monthly') {
-      startDate = '${now.year}-${now.month.toString().padLeft(2, '0')}-01';
-      final lastDay = DateTime(now.year, now.month + 1, 0);
-      endDate =
-          '${lastDay.year}-${lastDay.month.toString().padLeft(2, '0')}-${lastDay.day.toString().padLeft(2, '0')}';
-    } else {
-      // Pour les rapports personnalisés, ouvrir un sélecteur de dates
-      _showDateRangePicker();
-      return;
-    }
-
-    context.read<DashboardBloc>().add(
-          ExportMonthlyReport(startDate: startDate, endDate: endDate),
-        );
   }
 
   void _showSpotSelector() {
@@ -995,7 +1042,7 @@ class _DashboardViewState extends State<DashboardView> {
               crossAxisSpacing: 8,
               mainAxisSpacing: 8,
             ),
-            itemCount: 20, // Nombre de places disponibles
+            itemCount: 20,
             itemBuilder: (context, index) {
               final spotId = 'A${(index + 1).toString().padLeft(2, '0')}';
               return ElevatedButton(
@@ -1005,14 +1052,12 @@ class _DashboardViewState extends State<DashboardView> {
                   final monthAgo = DateTime(now.year, now.month - 1, now.day);
 
                   context.read<DashboardBloc>().add(
-                        LoadParkingSpotAnalytics(
-                          spotId: spotId,
-                          startDate:
-                              '${monthAgo.year}-${monthAgo.month.toString().padLeft(2, '0')}-${monthAgo.day.toString().padLeft(2, '0')}',
-                          endDate:
-                              '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}',
-                        ),
-                      );
+                    LoadParkingSpotAnalytics(
+                      spotId: spotId,
+                      startDate: '${monthAgo.year}-${monthAgo.month.toString().padLeft(2, '0')}-${monthAgo.day.toString().padLeft(2, '0')}',
+                      endDate: '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}',
+                    ),
+                  );
                 },
                 child: Text(spotId),
               );
@@ -1051,8 +1096,7 @@ class LineChartPainter extends CustomPainter {
 
     for (int i = 0; i < data.length; i++) {
       final x = (i / (data.length - 1)) * size.width;
-      final y =
-          size.height - (data[i].totalReservations / maxValue) * size.height;
+      final y = size.height - (data[i].totalReservations / maxValue) * size.height;
       points.add(Offset(x, y));
     }
 
@@ -1065,7 +1109,6 @@ class LineChartPainter extends CustomPainter {
 
     canvas.drawPath(path, paint);
 
-    // Dessiner les points
     final pointPaint = Paint()
       ..color = const Color(0xFF1E3A8A)
       ..style = PaintingStyle.fill;

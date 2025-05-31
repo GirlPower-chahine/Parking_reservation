@@ -13,7 +13,7 @@ class HistoricalAnalyticsDTO {
 
   factory HistoricalAnalyticsDTO.fromJson(Map<String, dynamic> json) {
     return HistoricalAnalyticsDTO(
-      date: json['date'] as String,
+      date: json['date'] as String? ?? '',
       totalReservations: _parseToInt(json['totalReservations']),
       occupancyRate: _parseToDouble(json['occupancyRate']),
       noShowRate: _parseToDouble(json['noShowRate']),
