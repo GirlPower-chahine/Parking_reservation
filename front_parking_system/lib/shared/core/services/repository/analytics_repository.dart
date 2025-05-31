@@ -1,4 +1,3 @@
-// analytics_repository.dart - Avec gestion timeout et fallback
 import 'package:dio/dio.dart';
 import '../api/api_service.dart';
 import '../../models/analytics/dashboard_summary_dto.dart';
@@ -17,7 +16,7 @@ class AnalyticsRepository {
         '/analytics/dashboard/summary',
         options: Options(
           validateStatus: (status) => status != null && status >= 200 && status < 300,
-          receiveTimeout: const Duration(seconds: 10), // Réduit à 10s
+          receiveTimeout: const Duration(seconds: 10),
         ),
       );
 
@@ -43,7 +42,7 @@ class AnalyticsRepository {
         '/analytics/dashboard/monthly',
         options: Options(
           validateStatus: (status) => status != null && status >= 200 && status < 300,
-          receiveTimeout: const Duration(seconds: 5), // Timeout court
+          receiveTimeout: const Duration(seconds: 5),
         ),
       );
 
@@ -58,9 +57,7 @@ class AnalyticsRepository {
       }
     }
 
-    // Fallback automatique : utiliser les données summary
     try {
-      print('🔄 [REPO] Fallback: création monthly depuis summary...');
       final summaryResponse = await _apiService.dio.get(
         '/analytics/dashboard/summary',
         options: Options(
@@ -172,7 +169,7 @@ class AnalyticsRepository {
   DashboardSummaryDTO _getDefaultSummary() {
     return const DashboardSummaryDTO(
       checkedInReservations: 0,
-      totalReservations: 60, // Valeur par défaut raisonnable
+      totalReservations: 60,
       usageByDayOfWeek: {
         'MONDAY': 0,
         'TUESDAY': 0,
