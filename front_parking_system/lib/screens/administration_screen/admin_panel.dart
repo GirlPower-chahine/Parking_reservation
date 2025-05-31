@@ -6,6 +6,7 @@ import '../../shared/core/services/repository/auth_repository.dart';
 import '../login_screen/login_bloc/login_bloc.dart';
 import '../login_screen/login_screen.dart';
 import 'add_user_screen.dart';
+import 'dashboard_bloc/dashboard_screen.dart';
 import 'users/user_management_screen.dart';
 import 'reservation_list_widget.dart';
 import '../../shared/core/services/api/api_service.dart';
@@ -85,6 +86,10 @@ class _AdminPanelState extends State<AdminPanel> {
           unselectedItemColor: Colors.grey,
           items: const [
             BottomNavigationBarItem(
+              icon: Icon(Icons.dashboard),
+              label: 'Dashboard',
+            ),
+            BottomNavigationBarItem(
               icon: Icon(Icons.local_parking),
               label: 'Places',
             ),
@@ -113,14 +118,16 @@ class _AdminPanelState extends State<AdminPanel> {
   Widget _buildBody() {
     switch (_selectedIndex) {
       case 0:
-        return _buildParkingSpotsScreen();
+        return const DashboardScreen();
       case 1:
-        return _buildReservationsScreen();
+        return _buildParkingSpotsScreen();
       case 2:
-        return const ReservationHistoryScreen();
+        return _buildReservationsScreen();
       case 3:
-        return _buildUsersScreen();
+        return const ReservationHistoryScreen();
       case 4:
+        return _buildUsersScreen();
+      case 5:
         return _buildAddUserScreen();
 
       default:
@@ -261,12 +268,13 @@ class _AdminPanelState extends State<AdminPanel> {
               ),
             ),
             const SizedBox(height: 10),
-            _buildMenuItem(Icons.local_parking, 'Places de Parking', 0,
+            _buildMenuItem(Icons.dashboard, 'Dashboard', 0),
+            _buildMenuItem(Icons.local_parking, 'Places de Parking', 1,
                 badge: 60),
-            _buildMenuItem(Icons.event_seat, 'Réservations', 1, badge: 18),
-            _buildMenuItem(Icons.history, 'Historique', 2, badge: 250),
-            _buildMenuItem(Icons.people, 'Utilisateurs', 2, badge: 12),
-            _buildMenuItem(Icons.person_add, 'Ajouter un utilisateur', 3),
+            _buildMenuItem(Icons.event_seat, 'Réservations', 2, badge: 18),
+            _buildMenuItem(Icons.history, 'Historique', 3, badge: 250),
+            _buildMenuItem(Icons.people, 'Utilisateurs', 4, badge: 12),
+            _buildMenuItem(Icons.person_add, 'Ajouter un utilisateur', 5),
             const Spacer(),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
