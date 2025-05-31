@@ -19,22 +19,16 @@ class ReservationHistoryRepository {
           'endDate': endDate,
         },
         options: Options(
-          validateStatus: (status) => status != null && status >= 200 && status < 300,
+          validateStatus: (status) =>
+              status != null && status >= 200 && status < 300,
           receiveTimeout: const Duration(seconds: 15),
         ),
       );
-
-      print('✅ Historique URL: ${response.requestOptions.uri}');
-      print('✅ Status: ${response.statusCode}');
-
       if (response.statusCode == 200) {
         final data = response.data;
 
         if (data is List) {
-          print('📦 Données reçues: ${data.length} réservations');
-
           final List<ReservationHistoryDTO> reservations = [];
-
           for (int i = 0; i < data.length; i++) {
             try {
               if (data[i] is Map<String, dynamic>) {
@@ -42,7 +36,8 @@ class ReservationHistoryRepository {
                 reservations.add(reservation);
 
                 if (i < 3) {
-                  print('📋 Réservation $i: ${reservation.userName} - ${reservation.status}');
+                  print(
+                      '📋 Réservation $i: ${reservation.userName} - ${reservation.status}');
                 }
               }
             } catch (e) {
@@ -53,26 +48,24 @@ class ReservationHistoryRepository {
 
           return reservations;
         } else {
-          throw Exception('Format de réponse invalide: attendu List, reçu ${data.runtimeType}');
+          throw Exception(
+              'Format de réponse invalide: attendu List, reçu ${data.runtimeType}');
         }
       } else {
         throw Exception('Erreur serveur: ${response.statusCode}');
       }
     } on DioException catch (e) {
-      print('❌ Erreur Historique:');
-      print('🔗 URL: ${e.requestOptions.uri}');
-      print('📊 Status: ${e.response?.statusCode}');
-      print('📝 Response: ${e.response?.data}');
-
       if (e.response?.statusCode == 500) {
         final responseData = e.response?.data;
         if (responseData is Map && responseData.containsKey('message')) {
           throw Exception('Erreur serveur: ${responseData['message']}');
         } else {
-          throw Exception('Erreur serveur interne (500). Vérifiez que l\'endpoint /api/reservations/history existe et fonctionne.');
+          throw Exception(
+              'Erreur serveur interne (500). Vérifiez que l\'endpoint /api/reservations/history existe et fonctionne.');
         }
       } else if (e.response?.statusCode == 404) {
-        throw Exception('Endpoint non trouvé (404). Vérifiez l\'URL: ${e.requestOptions.uri}');
+        throw Exception(
+            'Endpoint non trouvé (404). Vérifiez l\'URL: ${e.requestOptions.uri}');
       } else {
         throw Exception('Erreur réseau: ${e.message}');
       }
@@ -93,7 +86,8 @@ class ReservationHistoryRepository {
           'status': status,
         },
         options: Options(
-          validateStatus: (status) => status != null && status >= 200 && status < 300,
+          validateStatus: (status) =>
+              status != null && status >= 200 && status < 300,
         ),
       );
 
@@ -101,7 +95,8 @@ class ReservationHistoryRepository {
         final data = response.data;
         if (data is List) {
           return data
-              .map((json) => ReservationHistoryDTO.fromJson(json as Map<String, dynamic>))
+              .map((json) =>
+                  ReservationHistoryDTO.fromJson(json as Map<String, dynamic>))
               .toList();
         } else {
           throw Exception('Format de réponse invalide');
@@ -116,7 +111,8 @@ class ReservationHistoryRepository {
 
   Future<List<ReservationHistoryDTO>> getActiveReservations() async {
     final today = DateTime.now();
-    final todayStr = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+    final todayStr =
+        '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
 
     return getReservationsHistoryByStatus(
       startDate: todayStr,
@@ -130,8 +126,10 @@ class ReservationHistoryRepository {
     final monthAgo = DateTime(now.year, now.month - 1, now.day);
 
     return getReservationsHistoryByStatus(
-      startDate: '${monthAgo.year}-${monthAgo.month.toString().padLeft(2, '0')}-${monthAgo.day.toString().padLeft(2, '0')}',
-      endDate: '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}',
+      startDate:
+          '${monthAgo.year}-${monthAgo.month.toString().padLeft(2, '0')}-${monthAgo.day.toString().padLeft(2, '0')}',
+      endDate:
+          '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}',
       status: 'COMPLETED',
     );
   }
@@ -141,8 +139,10 @@ class ReservationHistoryRepository {
     final weekAgo = now.subtract(const Duration(days: 7));
 
     return getReservationsHistoryByStatus(
-      startDate: '${weekAgo.year}-${weekAgo.month.toString().padLeft(2, '0')}-${weekAgo.day.toString().padLeft(2, '0')}',
-      endDate: '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}',
+      startDate:
+          '${weekAgo.year}-${weekAgo.month.toString().padLeft(2, '0')}-${weekAgo.day.toString().padLeft(2, '0')}',
+      endDate:
+          '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}',
       status: 'CANCELLED_BY_USER',
     );
   }

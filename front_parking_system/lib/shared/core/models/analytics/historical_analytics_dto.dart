@@ -14,15 +14,12 @@ class HistoricalAnalyticsDTO {
   factory HistoricalAnalyticsDTO.fromJson(Map<String, dynamic> json) {
     return HistoricalAnalyticsDTO(
       date: json['date'] as String,
-      // Conversion sécurisée pour totalReservations
       totalReservations: _parseToInt(json['totalReservations']),
-      // Conversion sécurisée pour les doubles
       occupancyRate: _parseToDouble(json['occupancyRate']),
       noShowRate: _parseToDouble(json['noShowRate']),
     );
   }
 
-  // Méthodes utilitaires pour conversion sécurisée
   static int _parseToInt(dynamic value) {
     if (value == null) return 0;
     if (value is int) return value;
