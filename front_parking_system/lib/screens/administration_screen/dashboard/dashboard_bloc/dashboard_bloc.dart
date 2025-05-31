@@ -1,14 +1,13 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../shared/core/models/analytics/dashboard_summary_dto.dart';
 
-import '../../../shared/core/models/analytics/historical_analytics_dto.dart';
-import '../../../shared/core/models/analytics/monthly_analytics_dto.dart';
-import '../../../shared/core/models/analytics/parking_spot_analytics_dto.dart';
-import '../../../shared/core/services/repository/analytics_repository.dart';
-
-
+import '../../../../shared/core/models/analytics/dashboard_summary_dto.dart';
+import '../../../../shared/core/models/analytics/historical_analytics_dto.dart';
+import '../../../../shared/core/models/analytics/monthly_analytics_dto.dart';
+import '../../../../shared/core/models/analytics/parking_spot_analytics_dto.dart';
+import '../../../../shared/core/services/repository/analytics_repository.dart';
 
 part 'dashboard_event.dart';
+
 part 'dashboard_state.dart';
 
 class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
@@ -26,9 +25,9 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   }
 
   Future<void> _onLoadDashboardData(
-      LoadDashboardData event,
-      Emitter<DashboardState> emit,
-      ) async {
+    LoadDashboardData event,
+    Emitter<DashboardState> emit,
+  ) async {
     emit(state.copyWith(status: DashboardStatus.loading));
 
     try {
@@ -54,9 +53,9 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   }
 
   Future<void> _onLoadDashboardSummary(
-      LoadDashboardSummary event,
-      Emitter<DashboardState> emit,
-      ) async {
+    LoadDashboardSummary event,
+    Emitter<DashboardState> emit,
+  ) async {
     try {
       final summary = await repository.getDashboardSummary();
       emit(state.copyWith(summary: summary));
@@ -69,9 +68,9 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   }
 
   Future<void> _onLoadMonthlyAnalytics(
-      LoadMonthlyAnalytics event,
-      Emitter<DashboardState> emit,
-      ) async {
+    LoadMonthlyAnalytics event,
+    Emitter<DashboardState> emit,
+  ) async {
     try {
       final analytics = await repository.getMonthlyAnalytics();
       emit(state.copyWith(monthlyAnalytics: analytics));
@@ -84,9 +83,9 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   }
 
   Future<void> _onLoadHistoricalAnalytics(
-      LoadHistoricalAnalytics event,
-      Emitter<DashboardState> emit,
-      ) async {
+    LoadHistoricalAnalytics event,
+    Emitter<DashboardState> emit,
+  ) async {
     try {
       final historical = await repository.getHistoricalAnalytics(
         startDate: event.startDate,
@@ -102,9 +101,9 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   }
 
   Future<void> _onLoadParkingSpotAnalytics(
-      LoadParkingSpotAnalytics event,
-      Emitter<DashboardState> emit,
-      ) async {
+    LoadParkingSpotAnalytics event,
+    Emitter<DashboardState> emit,
+  ) async {
     try {
       final spotAnalytics = await repository.getParkingSpotAnalytics(
         spotId: event.spotId,
@@ -124,9 +123,9 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   }
 
   Future<void> _onExportMonthlyReport(
-      ExportMonthlyReport event,
-      Emitter<DashboardState> emit,
-      ) async {
+    ExportMonthlyReport event,
+    Emitter<DashboardState> emit,
+  ) async {
     emit(state.copyWith(isExporting: true));
 
     try {
@@ -138,7 +137,6 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       // Ici, vous pourriez sauvegarder le fichier ou déclencher un téléchargement
       // Pour l'instant, on émet juste le succès
       emit(state.copyWith(isExporting: false));
-
     } catch (e) {
       emit(state.copyWith(
         status: DashboardStatus.error,
@@ -149,16 +147,16 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   }
 
   Future<void> _onRefreshDashboard(
-      RefreshDashboard event,
-      Emitter<DashboardState> emit,
-      ) async {
+    RefreshDashboard event,
+    Emitter<DashboardState> emit,
+  ) async {
     add(LoadDashboardData());
   }
 
   void _onSelectDateRange(
-      SelectDateRange event,
-      Emitter<DashboardState> emit,
-      ) {
+    SelectDateRange event,
+    Emitter<DashboardState> emit,
+  ) {
     emit(state.copyWith(
       selectedStartDate: event.startDate,
       selectedEndDate: event.endDate,
@@ -166,8 +164,10 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
 
     // Recharger les données historiques avec la nouvelle plage de dates
     add(LoadHistoricalAnalytics(
-      startDate: '${event.startDate.year}-${event.startDate.month.toString().padLeft(2, '0')}-${event.startDate.day.toString().padLeft(2, '0')}',
-      endDate: '${event.endDate.year}-${event.endDate.month.toString().padLeft(2, '0')}-${event.endDate.day.toString().padLeft(2, '0')}',
+      startDate:
+          '${event.startDate.year}-${event.startDate.month.toString().padLeft(2, '0')}-${event.startDate.day.toString().padLeft(2, '0')}',
+      endDate:
+          '${event.endDate.year}-${event.endDate.month.toString().padLeft(2, '0')}-${event.endDate.day.toString().padLeft(2, '0')}',
     ));
   }
 }

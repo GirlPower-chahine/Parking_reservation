@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-
 import '../../../shared/core/models/analytics/historical_analytics_dto.dart';
 import '../../../shared/core/models/analytics/parking_spot_analytics_dto.dart';
 import '../../../shared/core/services/api/api_service.dart';
 import '../../../shared/core/services/repository/analytics_repository.dart';
-import 'dashboard_bloc.dart';
+import 'dashboard_bloc/dashboard_bloc.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -116,7 +114,7 @@ class _DashboardViewState extends State<DashboardView> {
 
   Widget _buildTabBar() {
     final tabs = ['Vue d\'ensemble', 'Analytics', 'Rapports'];
-    
+
     return Container(
       height: 50,
       color: Colors.white,
@@ -125,7 +123,7 @@ class _DashboardViewState extends State<DashboardView> {
           final index = entry.key;
           final title = entry.value;
           final isSelected = _currentPage == index;
-          
+
           return Expanded(
             child: GestureDetector(
               onTap: () {
@@ -139,7 +137,9 @@ class _DashboardViewState extends State<DashboardView> {
                 decoration: BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
-                      color: isSelected ? const Color(0xFF1E3A8A) : Colors.transparent,
+                      color: isSelected
+                          ? const Color(0xFF1E3A8A)
+                          : Colors.transparent,
                       width: 2,
                     ),
                   ),
@@ -149,7 +149,8 @@ class _DashboardViewState extends State<DashboardView> {
                     title,
                     style: TextStyle(
                       color: isSelected ? const Color(0xFF1E3A8A) : Colors.grey,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.normal,
                       fontSize: 14,
                     ),
                   ),
@@ -178,7 +179,7 @@ class _DashboardViewState extends State<DashboardView> {
   Widget _buildQuickStats(DashboardState state) {
     final summary = state.summary;
     final monthly = state.monthlyAnalytics;
-    
+
     return Column(
       children: [
         Row(
@@ -189,7 +190,8 @@ class _DashboardViewState extends State<DashboardView> {
                 '${summary?.totalReservations ?? 0}',
                 Icons.event_seat,
                 Colors.blue,
-                subtitle: 'Ce mois: ${monthly?.totalReservationsThisMonth ?? 0}',
+                subtitle:
+                    'Ce mois: ${monthly?.totalReservationsThisMonth ?? 0}',
               ),
             ),
             const SizedBox(width: 12),
@@ -213,7 +215,8 @@ class _DashboardViewState extends State<DashboardView> {
                 '${summary?.noShows ?? 0}',
                 Icons.warning,
                 Colors.orange,
-                subtitle: 'Taux: ${(monthly?.noShowRate ?? 0).toStringAsFixed(1)}%',
+                subtitle:
+                    'Taux: ${(monthly?.noShowRate ?? 0).toStringAsFixed(1)}%',
               ),
             ),
             const SizedBox(width: 12),
@@ -304,8 +307,9 @@ class _DashboardViewState extends State<DashboardView> {
 
   Widget _buildUsageByDay(DashboardState state) {
     final usageByDay = state.summary?.usageByDayOfWeek ?? {};
-    final maxUsage = usageByDay.values.fold(0, (max, value) => value > max ? value : max);
-    
+    final maxUsage =
+        usageByDay.values.fold(0, (max, value) => value > max ? value : max);
+
     if (usageByDay.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -347,7 +351,7 @@ class _DashboardViewState extends State<DashboardView> {
               children: _getDayOrder().map((day) {
                 final usage = usageByDay[day] ?? 0;
                 final height = maxUsage > 0 ? (usage / maxUsage * 150) : 0.0;
-                
+
                 return Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -396,9 +400,6 @@ class _DashboardViewState extends State<DashboardView> {
     );
   }
 
-
-
-
   Widget _buildAnalyticsTab(DashboardState state) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -416,7 +417,7 @@ class _DashboardViewState extends State<DashboardView> {
 
   Widget _buildMonthlyTrends(DashboardState state) {
     final monthly = state.monthlyAnalytics;
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -480,7 +481,8 @@ class _DashboardViewState extends State<DashboardView> {
     );
   }
 
-  Widget _buildTrendCard(String title, String value, IconData icon, Color color) {
+  Widget _buildTrendCard(
+      String title, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -516,7 +518,7 @@ class _DashboardViewState extends State<DashboardView> {
 
   Widget _buildHistoricalChart(DashboardState state) {
     final historical = state.historicalData;
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -565,9 +567,10 @@ class _DashboardViewState extends State<DashboardView> {
 
   Widget _buildSimpleLineChart(List<HistoricalAnalyticsDTO> data) {
     if (data.isEmpty) return const SizedBox.shrink();
-    
-    final maxReservations = data.map((e) => e.totalReservations).reduce((a, b) => a > b ? a : b);
-    
+
+    final maxReservations =
+        data.map((e) => e.totalReservations).reduce((a, b) => a > b ? a : b);
+
     return CustomPaint(
       size: const Size(double.infinity, 200),
       painter: LineChartPainter(data, maxReservations),
@@ -577,7 +580,7 @@ class _DashboardViewState extends State<DashboardView> {
   Widget _buildElectricChargerStats(DashboardState state) {
     final monthly = state.monthlyAnalytics;
     final chargerUsage = monthly?.electricChargerUsageRate ?? 0;
-    
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -642,7 +645,8 @@ class _DashboardViewState extends State<DashboardView> {
                     value: chargerUsage / 100,
                     strokeWidth: 8,
                     backgroundColor: Colors.grey[300],
-                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF1E3A8A)),
+                    valueColor:
+                        const AlwaysStoppedAnimation<Color>(Color(0xFF1E3A8A)),
                   ),
                 ),
               ),
@@ -701,8 +705,9 @@ class _DashboardViewState extends State<DashboardView> {
             children: [
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: state.isExporting ? null : () => _exportReport('monthly'),
-                  icon: state.isExporting 
+                  onPressed:
+                      state.isExporting ? null : () => _exportReport('monthly'),
+                  icon: state.isExporting
                       ? const SizedBox(
                           width: 16,
                           height: 16,
@@ -838,7 +843,8 @@ class _DashboardViewState extends State<DashboardView> {
     );
   }
 
-  Widget _buildSpotStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildSpotStatCard(
+      String title, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -901,19 +907,35 @@ class _DashboardViewState extends State<DashboardView> {
 
   // Méthodes utilitaires
   List<String> _getDayOrder() {
-    return ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
+    return [
+      'MONDAY',
+      'TUESDAY',
+      'WEDNESDAY',
+      'THURSDAY',
+      'FRIDAY',
+      'SATURDAY',
+      'SUNDAY'
+    ];
   }
 
   String _getDayAbbreviation(String day) {
     switch (day) {
-      case 'MONDAY': return 'Lun';
-      case 'TUESDAY': return 'Mar';
-      case 'WEDNESDAY': return 'Mer';
-      case 'THURSDAY': return 'Jeu';
-      case 'FRIDAY': return 'Ven';
-      case 'SATURDAY': return 'Sam';
-      case 'SUNDAY': return 'Dim';
-      default: return day.substring(0, 3);
+      case 'MONDAY':
+        return 'Lun';
+      case 'TUESDAY':
+        return 'Mar';
+      case 'WEDNESDAY':
+        return 'Mer';
+      case 'THURSDAY':
+        return 'Jeu';
+      case 'FRIDAY':
+        return 'Ven';
+      case 'SATURDAY':
+        return 'Sam';
+      case 'SUNDAY':
+        return 'Dim';
+      default:
+        return day.substring(0, 3);
     }
   }
 
@@ -930,31 +952,32 @@ class _DashboardViewState extends State<DashboardView> {
 
     if (picked != null) {
       context.read<DashboardBloc>().add(
-        SelectDateRange(
-          startDate: picked.start,
-          endDate: picked.end,
-        ),
-      );
+            SelectDateRange(
+              startDate: picked.start,
+              endDate: picked.end,
+            ),
+          );
     }
   }
 
   void _exportReport(String type) {
     final now = DateTime.now();
     String startDate, endDate;
-    
+
     if (type == 'monthly') {
       startDate = '${now.year}-${now.month.toString().padLeft(2, '0')}-01';
       final lastDay = DateTime(now.year, now.month + 1, 0);
-      endDate = '${lastDay.year}-${lastDay.month.toString().padLeft(2, '0')}-${lastDay.day.toString().padLeft(2, '0')}';
+      endDate =
+          '${lastDay.year}-${lastDay.month.toString().padLeft(2, '0')}-${lastDay.day.toString().padLeft(2, '0')}';
     } else {
       // Pour les rapports personnalisés, ouvrir un sélecteur de dates
       _showDateRangePicker();
       return;
     }
-    
+
     context.read<DashboardBloc>().add(
-      ExportMonthlyReport(startDate: startDate, endDate: endDate),
-    );
+          ExportMonthlyReport(startDate: startDate, endDate: endDate),
+        );
   }
 
   void _showSpotSelector() {
@@ -980,14 +1003,16 @@ class _DashboardViewState extends State<DashboardView> {
                   Navigator.pop(context);
                   final now = DateTime.now();
                   final monthAgo = DateTime(now.year, now.month - 1, now.day);
-                  
+
                   context.read<DashboardBloc>().add(
-                    LoadParkingSpotAnalytics(
-                      spotId: spotId,
-                      startDate: '${monthAgo.year}-${monthAgo.month.toString().padLeft(2, '0')}-${monthAgo.day.toString().padLeft(2, '0')}',
-                      endDate: '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}',
-                    ),
-                  );
+                        LoadParkingSpotAnalytics(
+                          spotId: spotId,
+                          startDate:
+                              '${monthAgo.year}-${monthAgo.month.toString().padLeft(2, '0')}-${monthAgo.day.toString().padLeft(2, '0')}',
+                          endDate:
+                              '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}',
+                        ),
+                      );
                 },
                 child: Text(spotId),
               );
@@ -1026,7 +1051,8 @@ class LineChartPainter extends CustomPainter {
 
     for (int i = 0; i < data.length; i++) {
       final x = (i / (data.length - 1)) * size.width;
-      final y = size.height - (data[i].totalReservations / maxValue) * size.height;
+      final y =
+          size.height - (data[i].totalReservations / maxValue) * size.height;
       points.add(Offset(x, y));
     }
 

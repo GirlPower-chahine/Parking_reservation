@@ -6,7 +6,7 @@ import '../../shared/core/services/repository/auth_repository.dart';
 import '../login_screen/login_bloc/login_bloc.dart';
 import '../login_screen/login_screen.dart';
 import 'add_user_screen.dart';
-import 'dashboard_bloc/dashboard_screen.dart';
+import 'dashboard/dashboard_screen.dart';
 import 'users/user_management_screen.dart';
 import 'reservation_list_widget.dart';
 import '../../shared/core/services/api/api_service.dart';
@@ -22,7 +22,6 @@ class AdminPanel extends StatefulWidget {
 class _AdminPanelState extends State<AdminPanel> {
   int _selectedIndex = 0;
 
-  // ✅ CORRECTION: Liste avec 6 titres pour correspondre aux 6 onglets
   final List<String> _titles = [
     'Dashboard',              // Index 0
     'Places de Parking',      // Index 1
@@ -124,17 +123,17 @@ class _AdminPanelState extends State<AdminPanel> {
   Widget _buildBody() {
     switch (_selectedIndex) {
       case 0:
-        return const DashboardScreen();           // Dashboard
+        return const DashboardScreen();
       case 1:
-        return _buildParkingSpotsScreen();        // Places de Parking
+        return _buildParkingSpotsScreen();
       case 2:
-        return _buildReservationsScreen();        // Réservations
+        return _buildReservationsScreen();
       case 3:
-        return const ReservationHistoryScreen();  // Historique
+        return const ReservationHistoryScreen();
       case 4:
-        return _buildUsersScreen();               // Utilisateurs
+        return _buildUsersScreen();
       case 5:
-        return _buildAddUserScreen();             // Ajouter un utilisateur
+        return _buildAddUserScreen();
       default:
         return const Center(child: Text('Écran non trouvé'));
     }
@@ -271,7 +270,6 @@ class _AdminPanelState extends State<AdminPanel> {
             ),
             const SizedBox(height: 10),
 
-            // ✅ Menu items avec les bons index
             _buildMenuItem(Icons.dashboard, 'Dashboard', 0),
             _buildMenuItem(Icons.local_parking, 'Places de Parking', 1, badge: 60),
             _buildMenuItem(Icons.event_seat, 'Réservations', 2, badge: 18),
