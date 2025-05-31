@@ -48,46 +48,50 @@ class MyApp extends StatelessWidget {
       create: (context) => LoginBloc(
         authRepository: RepositoryProvider.of<AuthRepository>(context),
       ),
-      child: BlocListener<LoginBloc, LoginState>(
-        listenWhen: (previous, current) =>
-        previous.status != current.status,
-        listener: (context, state) {
-          if (state.status == LoginStatus.initial) {
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (_) => const LoginScreen()),
-                  (route) => false,
-            );
-          }
-        },
-        child: MaterialApp(
-          title: 'Parking Reservation',
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            useMaterial3: true,
-            primarySwatch: Colors.blue,
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF1E3A8A),
-              primary: const Color(0xFF1E3A8A),
-              secondary: const Color(0xFF3B82F6),
-            ),
-            appBarTheme: const AppBarTheme(
-              backgroundColor: Color(0xFF1E3A8A),
-              foregroundColor: Colors.white,
-              elevation: 0,
-            ),
+      child: MaterialApp(
+        title: 'Parking Reservation',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          useMaterial3: true,
+          primarySwatch: Colors.blue,
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFF1E3A8A),
+            primary: const Color(0xFF1E3A8A),
+            secondary: const Color(0xFF3B82F6),
           ),
-          home: _getInitialScreen(),
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Color(0xFF1E3A8A),
+            foregroundColor: Colors.white,
+            elevation: 0,
+          ),
+        ),
+        home: BlocBuilder<LoginBloc, LoginState>(
+          builder: (context, state) {
+            if (state.status == LoginStatus.success && state.user?.role != null) {
+              return _getScreenForRole(state.user!.role);
+            }
+
+            if (token != null && role != null) {
+              return _getScreenForRole(role!);
+            }
+
+            return const LoginScreen();
+          },
         ),
       ),
     );
   }
 
-  Widget _getInitialScreen() {
-    if (token != null && role == 'SECRETARY') {
-      return const AdminPanel();
-    } else if (token != null && (role == 'EMPLOYEE' || role == 'MANAGER')) {
-      return EmployeePanel(isManager: role == 'MANAGER');
+  Widget _getScreenForRole(String role) {
+    switch (role.toUpperCase()) {
+      case 'MANAGER':
+        return const EmployeePanel(isManager: true);
+      case 'EMPLOYEE':
+        return const EmployeePanel(isManager: false);
+      case 'SECRETARY':
+        return const AdminPanel();
+      default:
+        return const LoginScreen();
     }
-    return const LoginScreen();
   }
 }
