@@ -107,4 +107,18 @@ public interface ReservationRepository extends JpaRepository<Reservation, UUID> 
             "AND HOUR(r.endDateTime) = HOUR(:endDateTime)")
     List<Reservation> findByStatusAndEndDateTime(@Param("status") ReservationStatus status,
                                                  @Param("endDateTime") LocalDateTime endDateTime);
+
+    @Query("SELECT r FROM Reservation r WHERE DATE(r.startDateTime) >= :startDate " +
+            "AND DATE(r.startDateTime) <= :endDate " +
+            "ORDER BY r.startDateTime DESC")
+    List<Reservation> findAllReservationsInPeriod(@Param("startDate") LocalDate startDate,
+                                                  @Param("endDate") LocalDate endDate);
+
+    @Query("SELECT r FROM Reservation r WHERE DATE(r.startDateTime) >= :startDate " +
+            "AND DATE(r.startDateTime) <= :endDate " +
+            "AND r.status = :status " +
+            "ORDER BY r.startDateTime DESC")
+    List<Reservation> findReservationsByStatusInPeriod(@Param("startDate") LocalDate startDate,
+                                                       @Param("endDate") LocalDate endDate,
+                                                       @Param("status") ReservationStatus status);
 }

@@ -1,5 +1,6 @@
 package org.example.backend.service;
 
+import org.example.backend.configuration.JwtUtils;
 import org.example.backend.dto.AuthDTO;
 import org.example.backend.entity.User;
 import org.example.backend.repository.UserRepository;
@@ -13,8 +14,11 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.example.backend.configuration.JwtUtils; // Assurez-vous d'importer JwtUtils
+
+import java.util.Map;
+import java.util.UUID; // ✅ IMPORT AJOUTÉ
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -40,88 +44,111 @@ public class AuthServiceTest {
     @BeforeEach
     void setUp() {
         authDTO = new AuthDTO();
-        authDTO.setUsername("testuser");
-        authDTO.setPassword("password");
-        // Le rôle ne doit PAS être défini pour l'enregistrement dans le DTO,
-        // car il est attribué par défaut dans le service.
+        authDTO.setUsername("testuser@test.com");
+        authDTO.setPassword("password123");
+        authDTO.setRole("EMPLOYEE"); // ✅ Rôle requis
 
         testUser = new User();
         testUser.setUserId(UUID.randomUUID());
-        testUser.setUsername("testuser");
+        testUser.setUsername("testuser@test.com");
         testUser.setPassword("encodedPassword");
         testUser.setRole("EMPLOYEE");
+        testUser.setFirstName("testuser");
     }
 
     @Test
     void isUsernameAvailable_shouldReturnTrue_whenUsernameDoesNotExist() {
-        when(userRepository.findByUsername("testuser")).thenReturn(null);
-        assertTrue(authService.isUsernameAvailable("testuser"));
-        verify(userRepository, times(1)).findByUsername("testuser");
+        // GIVEN
+        when(userRepository.findByUsername("testuser@test.com")).thenReturn(null);
+
+        // WHEN
+        boolean isAvailable = authService.isUsernameAvailable("testuser@test.com");
+
+        // THEN
+        assertTrue(isAvailable);
+        verify(userRepository, times(1)).findByUsername("testuser@test.com");
     }
 
     @Test
     void isUsernameAvailable_shouldReturnFalse_whenUsernameExists() {
-        when(userRepository.findByUsername("testuser")).thenReturn(testUser);
-        assertFalse(authService.isUsernameAvailable("testuser"));
-        verify(userRepository, times(1)).findByUsername("testuser");
+        // GIVEN
+        when(userRepository.findByUsername("testuser@test.com")).thenReturn(testUser);
+
+        // WHEN
+        boolean isAvailable = authService.isUsernameAvailable("testuser@test.com");
+
+        // THEN
+        assertFalse(isAvailable);
+        verify(userRepository, times(1)).findByUsername("testuser@test.com");
     }
 
     @Test
-    void registerUser_shouldRegisterNewUserSuccessfully() {
-        when(userRepository.findByUsername(authDTO.getUsername())).thenReturn(null);
+    void registerUser_shouldRegisterNewUserSuccessfully() throws Exception {
+        // GIVEN
         when(passwordEncoder.encode(authDTO.getPassword())).thenReturn("encodedPassword");
         when(userRepository.save(any(User.class))).thenReturn(testUser);
 
+        // WHEN
         User registeredUser = authService.registerUser(authDTO);
 
+        // THEN
         assertNotNull(registeredUser);
-        assertEquals("testuser", registeredUser.getUsername());
+        assertEquals("testuser@test.com", registeredUser.getUsername());
         assertEquals("encodedPassword", registeredUser.getPassword());
-        assertEquals("EMPLOYEE", registeredUser.getRole()); // Vérifie le rôle par défaut
-        verify(userRepository, times(1)).findByUsername(authDTO.getUsername());
+        assertEquals("EMPLOYEE", registeredUser.getRole());
         verify(passwordEncoder, times(1)).encode(authDTO.getPassword());
         verify(userRepository, times(1)).save(any(User.class));
     }
 
     @Test
-    void registerUser_shouldThrowException_whenUsernameAlreadyExists() {
-        when(userRepository.findByUsername(authDTO.getUsername())).thenReturn(testUser);
+    void registerUser_shouldThrowException_whenInvalidRole() {
+        // GIVEN
+        authDTO.setRole("INVALID_ROLE");
 
+        // WHEN & THEN
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             authService.registerUser(authDTO);
         });
 
-        assertEquals("Username is already in use", exception.getMessage());
-        verify(userRepository, times(1)).findByUsername(authDTO.getUsername());
-        verify(passwordEncoder, never()).encode(anyString());
+        assertEquals("Role must be 'EMPLOYEE', 'SECRETARY', or 'MANAGER'", exception.getMessage());
         verify(userRepository, never()).save(any(User.class));
     }
 
     @Test
-    void authenticateUser_shouldReturnToken_onSuccessfulAuthentication() {
+    void authenticateUser_shouldReturnTokenData_onSuccessfulAuthentication() throws AuthenticationException {
+        // GIVEN
         Authentication authentication = mock(Authentication.class);
         when(authentication.isAuthenticated()).thenReturn(true);
-        when(authentication.getName()).thenReturn("testuser");
 
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenReturn(authentication);
-        when(jwtUtils.generateToken("testuser")).thenReturn("mocked_jwt_token");
-        when(userRepository.findByUsername("testuser")).thenReturn(testUser);
+        when(jwtUtils.generateToken("testuser@test.com")).thenReturn("mocked_jwt_token");
+        when(userRepository.findByUsername("testuser@test.com")).thenReturn(testUser);
 
-        String token = authService.authenticateUser(authDTO);
+        // WHEN
+        // ✅ CORRIGÉ : authenticateUser retourne Map<String, Object>
+        Map<String, Object> authData = authService.authenticateUser(authDTO);
 
-        assertNotNull(token);
-        assertEquals("mocked_jwt_token", token);
+        // THEN
+        assertNotNull(authData);
+        assertEquals("mocked_jwt_token", authData.get("token"));
+        assertEquals("Bearer", authData.get("type"));
+        assertEquals("EMPLOYEE", authData.get("role"));
+        assertEquals(testUser.getUserId(), authData.get("userId"));
+
         verify(authenticationManager, times(1)).authenticate(any(UsernamePasswordAuthenticationToken.class));
-        verify(jwtUtils, times(1)).generateToken("testuser");
+        verify(jwtUtils, times(1)).generateToken("testuser@test.com");
+        verify(userRepository, times(1)).findByUsername("testuser@test.com");
     }
 
     @Test
     void authenticateUser_shouldThrowException_onFailedAuthentication() {
+        // GIVEN
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenThrow(new BadCredentialsException("Invalid credentials"));
 
-        BadCredentialsException exception = assertThrows(BadCredentialsException.class, () -> {
+        // WHEN & THEN
+        AuthenticationException exception = assertThrows(AuthenticationException.class, () -> {
             authService.authenticateUser(authDTO);
         });
 

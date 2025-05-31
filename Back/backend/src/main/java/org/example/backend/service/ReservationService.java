@@ -81,6 +81,8 @@ public class ReservationService {
         }
     }
 
+    // Remplacer la méthode validateReservationRequest dans ReservationService.java
+
     private void validateReservationRequest(User user, ReservationDTO dto) {
         LocalDate today = LocalDate.now();
 
@@ -92,24 +94,45 @@ public class ReservationService {
             throw new BusinessException("La date de fin doit être après la date de début");
         }
 
-        long daysBetween = dto.getStartDate().datesUntil(dto.getEndDate().plusDays(1)).count();
+        // MODIFICATION IMPORTANTE : Calculer les JOURS OUVRABLES
+        List<LocalDate> requestedWorkingDays = generateWorkingDays(dto.getStartDate(), dto.getEndDate());
+        long numberOfWorkingDaysInRequest = requestedWorkingDays.size();
 
-        if ("EMPLOYEE".equals(user.getRole()) && daysBetween > 5) {
-            throw new BusinessException("Les employés ne peuvent réserver que 5 jours maximum");
+        // Validation de la durée maximale pour la demande
+        if ("EMPLOYEE".equals(user.getRole()) && numberOfWorkingDaysInRequest > 5) {
+            throw new BusinessException("Les employés ne peuvent réserver que 5 jours ouvrables maximum");
         }
 
-        if ("MANAGER".equals(user.getRole()) && daysBetween > 30) {
-            throw new BusinessException("Les managers ne peuvent réserver que 30 jours maximum");
+        if ("MANAGER".equals(user.getRole()) && numberOfWorkingDaysInRequest > 30) {
+            throw new BusinessException("Les managers ne peuvent réserver que 30 jours ouvrables maximum");
         }
 
-        // Vérifier le nombre de réservations actives
-        long activeReservations = reservationRepository.countActiveReservationsInPeriod(
-                user.getUserId(), today, dto.getEndDate()
-        );
+        // Vérifier le nombre de réservations actives (en jours ouvrables)
+        long activeWorkingDaysCount = countActiveWorkingDays(user.getUserId(), today, dto.getEndDate());
 
-        if ("EMPLOYEE".equals(user.getRole()) && activeReservations + daysBetween > 5) {
-            throw new BusinessException("Limite de 5 réservations actives atteinte");
+        // Validation de la limite cumulée
+        if ("EMPLOYEE".equals(user.getRole()) && (activeWorkingDaysCount + numberOfWorkingDaysInRequest) > 5) {
+            throw new BusinessException(String.format(
+                    "Limite de 5 jours ouvrables atteinte. Vous avez déjà %d jour(s) réservé(s) et tentez d'en ajouter %d.",
+                    activeWorkingDaysCount, numberOfWorkingDaysInRequest
+            ));
         }
+    }
+
+    private long countActiveWorkingDays(UUID userId, LocalDate fromDate, LocalDate toDate) {
+        List<Reservation> activeReservations = reservationRepository
+                .findActiveReservationsByUser(userId).stream()
+                .filter(r -> !r.getStartDateTime().toLocalDate().isBefore(fromDate))
+                .filter(r -> !r.getStartDateTime().toLocalDate().isAfter(toDate))
+                .collect(Collectors.toList());
+
+        // Compter les jours ouvrables uniques
+        return activeReservations.stream()
+                .map(r -> r.getStartDateTime().toLocalDate())
+                .distinct()
+                .filter(date -> date.getDayOfWeek() != DayOfWeek.SATURDAY
+                        && date.getDayOfWeek() != DayOfWeek.SUNDAY)
+                .count();
     }
 
     private List<LocalDate> generateWorkingDays(LocalDate start, LocalDate end) {
@@ -291,8 +314,23 @@ public class ReservationService {
 
     @Transactional(readOnly = true)
     public List<ReservationResponseDTO> getAllReservationsHistory(LocalDate startDate, LocalDate endDate, String status) {
-        return reservationRepository.findReservationsHistory(startDate, endDate, status)
-                .stream()
+        List<Reservation> reservations;
+
+        if (status != null && !status.isEmpty() && !status.equalsIgnoreCase("ALL")) {
+            try {
+                ReservationStatus reservationStatus = ReservationStatus.valueOf(status.toUpperCase());
+                reservations = reservationRepository.findReservationsByStatusInPeriod(startDate, endDate, reservationStatus);
+            } catch (IllegalArgumentException e) {
+                log.warn("Status invalide fourni: {}", status);
+                // Retourner une liste vide au lieu de lancer une exception
+                return new ArrayList<>();
+            }
+        } else {
+            // Si pas de status ou status = "ALL", récupérer toutes les réservations
+            reservations = reservationRepository.findAllReservationsInPeriod(startDate, endDate);
+        }
+
+        return reservations.stream()
                 .map(this::convertToResponseDTO)
                 .collect(Collectors.toList());
     }

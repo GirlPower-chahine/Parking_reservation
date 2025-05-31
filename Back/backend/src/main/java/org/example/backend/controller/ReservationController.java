@@ -160,4 +160,5 @@ public class ReservationController {
         // Pour l'instant, elle est simplifiée
         return reservationService.getUserIdByUsername(username);
     }
+
 }
