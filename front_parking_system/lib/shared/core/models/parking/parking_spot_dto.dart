@@ -4,8 +4,7 @@ class ParkingSpotDTO {
   final int spotNumber;
   final bool hasElectricCharger;
   final bool isAvailable;
-  final String createdAt;
-  final String updatedAt;
+  final int version;
 
   ParkingSpotDTO({
     required this.spotId,
@@ -13,8 +12,7 @@ class ParkingSpotDTO {
     required this.spotNumber,
     required this.hasElectricCharger,
     required this.isAvailable,
-    required this.createdAt,
-    required this.updatedAt,
+    required this.version,
   });
 
   factory ParkingSpotDTO.fromJson(Map<String, dynamic> json) {
@@ -24,8 +22,7 @@ class ParkingSpotDTO {
       spotNumber: json['spotNumber'],
       hasElectricCharger: json['hasElectricCharger'],
       isAvailable: json['isAvailable'],
-      createdAt: json['createdAt'],
-      updatedAt: json['updatedAt'],
+      version: json['version'],
     );
   }
 
@@ -36,8 +33,7 @@ class ParkingSpotDTO {
       'spotNumber': spotNumber,
       'hasElectricCharger': hasElectricCharger,
       'isAvailable': isAvailable,
-      'createdAt': createdAt,
-      'updatedAt': updatedAt,
+      'version': version,
     };
   }
 }

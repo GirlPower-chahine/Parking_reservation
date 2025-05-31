@@ -1,4 +1,3 @@
-// lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -45,37 +44,49 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Parking Reservation',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        primarySwatch: Colors.blue,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF1E3A8A),
-          primary: const Color(0xFF1E3A8A),
-          secondary: const Color(0xFF3B82F6),
-        ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF1E3A8A),
-          foregroundColor: Colors.white,
-          elevation: 0,
-        ),
+    return BlocProvider<LoginBloc>(
+      create: (context) => LoginBloc(
+        authRepository: RepositoryProvider.of<AuthRepository>(context),
       ),
-      home: BlocProvider<LoginBloc>(
-        create: (context) => LoginBloc(
-          authRepository: RepositoryProvider.of<AuthRepository>(context),
+      child: BlocListener<LoginBloc, LoginState>(
+        listenWhen: (previous, current) =>
+        previous.status != current.status,
+        listener: (context, state) {
+          if (state.status == LoginStatus.initial) {
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  (route) => false,
+            );
+          }
+        },
+        child: MaterialApp(
+          title: 'Parking Reservation',
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(
+            useMaterial3: true,
+            primarySwatch: Colors.blue,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF1E3A8A),
+              primary: const Color(0xFF1E3A8A),
+              secondary: const Color(0xFF3B82F6),
+            ),
+            appBarTheme: const AppBarTheme(
+              backgroundColor: Color(0xFF1E3A8A),
+              foregroundColor: Colors.white,
+              elevation: 0,
+            ),
+          ),
+          home: _getInitialScreen(),
         ),
-        child: _getInitialScreen(),
       ),
     );
   }
 
   Widget _getInitialScreen() {
     if (token != null && role == 'SECRETARY') {
-      return AdminPanel();
+      return const AdminPanel();
     } else if (token != null && role == 'EMPLOYEE') {
-      return EmployeePanel();
+      return const EmployeePanel();
     }
     return const LoginScreen();
   }

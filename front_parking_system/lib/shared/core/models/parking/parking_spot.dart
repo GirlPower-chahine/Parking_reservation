@@ -6,8 +6,7 @@ class ParkingSpot {
   final int spotNumber;
   final bool hasElectricCharger;
   final bool isAvailable;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final int version;
 
   ParkingSpot({
     required this.spotId,
@@ -15,8 +14,7 @@ class ParkingSpot {
     required this.spotNumber,
     required this.hasElectricCharger,
     required this.isAvailable,
-    required this.createdAt,
-    required this.updatedAt,
+    required this.version,
   });
 
   factory ParkingSpot.fromDTO(ParkingSpotDTO dto) {
@@ -26,8 +24,7 @@ class ParkingSpot {
       spotNumber: dto.spotNumber,
       hasElectricCharger: dto.hasElectricCharger,
       isAvailable: dto.isAvailable,
-      createdAt: DateTime.parse(dto.createdAt),
-      updatedAt: DateTime.parse(dto.updatedAt),
+      version: dto.version,
     );
   }
 }

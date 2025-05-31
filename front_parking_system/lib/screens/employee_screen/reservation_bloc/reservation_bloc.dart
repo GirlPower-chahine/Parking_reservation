@@ -20,10 +20,11 @@ class ReservationBloc extends Bloc<ReservationEvent, ReservationState> {
     try {
       final confirmationCode = await repository.createReservation(
         ReservationRequestDTO(
-          reservationDate: event.date,
+          startDate: event.startDate,
+          endDate: event.endDate,
           timeSlot: event.timeSlot,
           spotId: event.spotId,
-          needsElectricCharge: event.needsElectricCharge,
+          needsElectricCharger: event.needsElectricCharge,
         ),
       );
       emit(state.copyWith(

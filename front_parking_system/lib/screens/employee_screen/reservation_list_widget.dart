@@ -164,10 +164,8 @@ class ReservationListView extends StatelessWidget {
   void _showReservationPopup(String spotId, BuildContext context) async {
     DateTime selectedDate = DateTime.now();
     String selectedTimeSlot = 'MORNING';
-    // Récupérer la place de parking sélectionnée
     final spot = context.read<ParkingBloc>().state.parkingSpots
         .firstWhere((spot) => spot.spotId == spotId);
-    // La valeur needsCharge sera égale à hasElectricCharger de la place
     final needsCharge = spot.hasElectricCharger;
 
     final currentUser = await LocalStorage.getUser();
@@ -248,7 +246,7 @@ class ReservationListView extends StatelessWidget {
                               'Cette place est équipée d\'une borne de recharge',
                               style: TextStyle(
                                 color: Colors.blue,
-                                fontStyle: FontStyle.italic,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ),
@@ -263,10 +261,11 @@ class ReservationListView extends StatelessWidget {
                         onPressed: state.status == ReservationStatus.loading
                             ? null
                             : () {
+                          final formattedDate = selectedDate.toIso8601String().split('T')[0];
                           context.read<ReservationBloc>().add(
                             CreateReservation(
-                              userId: currentUser.id,
-                              date: selectedDate.toIso8601String().split('T')[0],
+                              startDate: formattedDate,
+                              endDate: formattedDate,
                               timeSlot: selectedTimeSlot,
                               spotId: spotId,
                               needsElectricCharge: needsCharge,

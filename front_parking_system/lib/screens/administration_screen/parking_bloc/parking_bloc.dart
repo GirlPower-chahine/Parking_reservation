@@ -27,8 +27,7 @@ class ParkingBloc extends Bloc<ParkingEvent, ParkingState> {
         spotNumber: spot.spotNumber,
         hasElectricCharger: spot.hasElectricCharger,
         isAvailable: spot.isAvailable,
-        createdAt: spot.createdAt.toIso8601String(),
-        updatedAt: spot.updatedAt.toIso8601String(),
+        version: spot.version,
       ))
           .toList();
 
