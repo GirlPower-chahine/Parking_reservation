@@ -15,6 +15,30 @@ class MonthlyAnalyticsDTO {
     required this.activeReservationsToday,
   });
 
+  // Factory pour créer depuis les données summary en attendant la vraie API monthly
+  factory MonthlyAnalyticsDTO.fromSummaryData(Map<String, dynamic> summaryJson) {
+    print('🔄 [DTO] Création monthly depuis summary data');
+
+    final occupancyRate = _parseToDouble(summaryJson['currentOccupancyRate']);
+    final noShowRate = _parseToDouble(summaryJson['todayNoShowRate']);
+    final occupiedSpots = _parseToInt(summaryJson['occupiedSpots']);
+    final totalSpots = _parseToInt(summaryJson['totalSpots']);
+
+    // Calcul des réservations approximatives
+    final currentReservations = (totalSpots * occupancyRate / 100).round();
+
+    print('🎯 [DTO] Monthly calculé: occupancy=$occupancyRate%, noShow=$noShowRate%, active=$occupiedSpots');
+
+    return MonthlyAnalyticsDTO(
+      averageOccupancyRate: occupancyRate,
+      noShowRate: noShowRate,
+      electricChargerUsageRate: 0.0, // Pas de données pour ça dans votre API
+      dailyStats: {}, // Vide pour l'instant
+      totalReservationsThisMonth: currentReservations,
+      activeReservationsToday: occupiedSpots,
+    );
+  }
+
   factory MonthlyAnalyticsDTO.fromJson(Map<String, dynamic> json) {
     return MonthlyAnalyticsDTO(
       averageOccupancyRate: _parseToDouble(json['averageOccupancyRate']),

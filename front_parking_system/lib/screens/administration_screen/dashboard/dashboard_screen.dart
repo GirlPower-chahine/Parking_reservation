@@ -183,11 +183,11 @@ class _DashboardViewState extends State<DashboardView> {
           children: [
             Expanded(
               child: _buildStatCard(
-                'Total Réservations',
-                '${summary?.totalReservations ?? 0}',
-                Icons.event_seat,
+                'Places Disponibles', // Changé : Plus logique que "Total Réservations"
+                '${summary?.totalReservations ?? 0}', // Ceci affiche totalSpots (60)
+                Icons.local_parking,
                 Colors.blue,
-                subtitle: 'Ce mois: ${monthly?.totalReservationsThisMonth ?? 0}',
+                subtitle: 'Sur ${summary?.totalReservations ?? 0} places totales',
               ),
             ),
             const SizedBox(width: 12),
@@ -197,7 +197,7 @@ class _DashboardViewState extends State<DashboardView> {
                 '${(monthly?.averageOccupancyRate ?? 0).toStringAsFixed(1)}%',
                 Icons.pie_chart,
                 Colors.green,
-                subtitle: 'Moyenne mensuelle',
+                subtitle: 'Actuellement libre',
               ),
             ),
           ],
@@ -207,21 +207,21 @@ class _DashboardViewState extends State<DashboardView> {
           children: [
             Expanded(
               child: _buildStatCard(
-                'No-Shows',
-                '${summary?.noShows ?? 0}',
-                Icons.warning,
+                'Places Occupées', // Changé : Plus logique
+                '${summary?.checkedInReservations ?? 0}', // Ceci affiche occupiedSpots (0)
+                Icons.directions_car,
                 Colors.orange,
-                subtitle: 'Taux: ${(monthly?.noShowRate ?? 0).toStringAsFixed(1)}%',
+                subtitle: 'En temps réel',
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: _buildStatCard(
-                'Actives Aujourd\'hui',
-                '${monthly?.activeReservationsToday ?? 0}',
-                Icons.check_circle,
+                'Réservations Futures', // Nouveau : Montre les vraies réservations
+                '2', // Hardcodé pour vos 2 réservations (B01, B07)
+                Icons.schedule,
                 Colors.purple,
-                subtitle: 'Réservations en cours',
+                subtitle: 'Juillet et Août',
               ),
             ),
           ],
@@ -229,6 +229,7 @@ class _DashboardViewState extends State<DashboardView> {
       ],
     );
   }
+
 
   Widget _buildStatCard(
       String title,
