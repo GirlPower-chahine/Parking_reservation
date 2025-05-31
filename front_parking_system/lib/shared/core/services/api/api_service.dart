@@ -42,6 +42,10 @@ class ApiService {
     return await dio.get(path, queryParameters: queryParameters);
   }
 
+  Future<Response> delete(String path) async {
+    return await dio.delete(path);
+  }
+
   void setAuthToken(String token) {
     dio.options.headers['Authorization'] = 'Bearer $token';
   }

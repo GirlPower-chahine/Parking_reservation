@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:parking_system/screens/employee_screen/reservation_screen.dart';
 import '../login_screen/login_bloc/login_bloc.dart';
 import '../login_screen/login_screen.dart';
 import '../employee_screen/reservation_list_widget.dart';
@@ -105,46 +106,7 @@ class _EmployeePanelState extends State<EmployeePanel> {
   }
 
   Widget _buildReservationsScreen() {
-    return Container(
-      color: Colors.grey[100],
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: 8, // Walking Skeleton: 8 réservations d'exemple
-        itemBuilder: (context, index) {
-          final reservations = [
-            {'user': 'Alice Martin', 'spot': 'A01', 'time': '09:00 - 17:00'},
-            {'user': 'Bob Dupont', 'spot': 'B03', 'time': '08:30 - 16:30'},
-            {'user': 'Claire Leroy', 'spot': 'C02', 'time': '10:00 - 18:00'},
-            {'user': 'David Chen', 'spot': 'A05', 'time': '07:45 - 15:45'},
-            {'user': 'Emma Wilson', 'spot': 'D01', 'time': '09:15 - 17:15'},
-            {'user': 'Frank Miller', 'spot': 'B07', 'time': '08:00 - 16:00'},
-            {'user': 'Grace Kim', 'spot': 'E03', 'time': '10:30 - 18:30'},
-            {'user': 'Henry Brown', 'spot': 'C06', 'time': '09:30 - 17:30'},
-          ];
-
-          final reservation = reservations[index];
-
-          return Card(
-            margin: const EdgeInsets.only(bottom: 8),
-            child: ListTile(
-              leading: const CircleAvatar(
-                backgroundColor: Color(0xFF1E3A8A),
-                child: Icon(Icons.person, color: Colors.white),
-              ),
-              title: Text(reservation['user']!),
-              subtitle: Text('Place ${reservation['spot']} • ${reservation['time']}'),
-              trailing: PopupMenuButton(
-                itemBuilder: (context) => [
-                  const PopupMenuItem(value: 'edit', child: Text('Modifier')),
-                  const PopupMenuItem(value: 'cancel', child: Text('Annuler')),
-                ],
-                onSelected: (value) => _handleReservationAction(value, reservation['user']!),
-              ),
-            ),
-          );
-        },
-      ),
-    );
+    return const ReservationScreen();
   }
 
   Widget _buildLeftDrawer() {

@@ -17,3 +17,9 @@ class CreateReservation extends ReservationEvent {
     required this.needsElectricCharge,
   });
 }
+
+class CancelReservation extends ReservationEvent {
+  final String reservationId;
+
+  CancelReservation(this.reservationId);
+}
