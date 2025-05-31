@@ -45,9 +45,15 @@ class ReservationHistoryState {
     );
   }
 
+  // Getters pour les statistiques avec vrais statuts
   int get totalReservations => reservations.length;
-  int get activeReservations => reservations.where((r) => r.status == 'ACTIVE').length;
-  int get completedReservations => reservations.where((r) => r.status == 'COMPLETED').length;
-  int get cancelledReservations => reservations.where((r) => r.status == 'CANCELLED_BY_USER').length;
-  int get checkedInReservations => reservations.where((r) => r.status == 'CHECKED_IN').length;
+  int get activeReservations => reservations.where((r) => r.status.toUpperCase() == 'ACTIVE').length;
+  int get completedReservations => reservations.where((r) => r.status.toUpperCase() == 'COMPLETED').length;
+  int get cancelledReservations => reservations.where((r) =>
+  r.status.toUpperCase() == 'CANCELLED_BY_USER' ||
+      r.status.toUpperCase() == 'CANCELLED' ||
+      r.status.toUpperCase() == 'CANCELLED_AUTO'
+  ).length;
+  int get checkedInReservations => reservations.where((r) => r.status.toUpperCase() == 'CHECKED_IN').length;
+  int get expiredReservations => reservations.where((r) => r.status.toUpperCase() == 'EXPIRED').length;
 }

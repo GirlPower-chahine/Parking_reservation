@@ -21,12 +21,17 @@ class AdminPanel extends StatefulWidget {
 
 class _AdminPanelState extends State<AdminPanel> {
   int _selectedIndex = 0;
+
+  // ✅ CORRECTION: Liste avec 6 titres pour correspondre aux 6 onglets
   final List<String> _titles = [
-    'Places de Parking',
-    'Réservations',
-    'Utilisateurs',
-    'Ajouter un utilisateur'
+    'Dashboard',              // Index 0
+    'Places de Parking',      // Index 1
+    'Réservations',          // Index 2
+    'Historique',            // Index 3
+    'Utilisateurs',          // Index 4
+    'Ajouter un utilisateur' // Index 5
   ];
+
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
@@ -40,7 +45,7 @@ class _AdminPanelState extends State<AdminPanel> {
           backgroundColor: const Color(0xFF1E3A8A),
           elevation: 0,
           title: Text(
-            _titles[_selectedIndex],
+            _titles[_selectedIndex], // ✅ Maintenant ça marche avec 6 titres
             style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,
@@ -66,9 +71,10 @@ class _AdminPanelState extends State<AdminPanel> {
                   context.read<LoginBloc>().add(LogoutRequested());
                   Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(builder: (_) => const LoginScreen()),
-                    (route) => false,
+                        (route) => false,
                   );
-                }),
+                }
+            ),
             const SizedBox(width: 10),
           ],
         ),
@@ -118,18 +124,17 @@ class _AdminPanelState extends State<AdminPanel> {
   Widget _buildBody() {
     switch (_selectedIndex) {
       case 0:
-        return const DashboardScreen();
+        return const DashboardScreen();           // Dashboard
       case 1:
-        return _buildParkingSpotsScreen();
+        return _buildParkingSpotsScreen();        // Places de Parking
       case 2:
-        return _buildReservationsScreen();
+        return _buildReservationsScreen();        // Réservations
       case 3:
-        return const ReservationHistoryScreen();
+        return const ReservationHistoryScreen();  // Historique
       case 4:
-        return _buildUsersScreen();
+        return _buildUsersScreen();               // Utilisateurs
       case 5:
-        return _buildAddUserScreen();
-
+        return _buildAddUserScreen();             // Ajouter un utilisateur
       default:
         return const Center(child: Text('Écran non trouvé'));
     }
@@ -144,7 +149,7 @@ class _AdminPanelState extends State<AdminPanel> {
       color: Colors.grey[100],
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
-        itemCount: 8, // Walking Skeleton: 8 réservations d'exemple
+        itemCount: 8,
         itemBuilder: (context, index) {
           final reservations = [
             {'user': 'Alice Martin', 'spot': 'A01', 'time': '09:00 - 17:00'},
@@ -167,15 +172,13 @@ class _AdminPanelState extends State<AdminPanel> {
                 child: Icon(Icons.person, color: Colors.white),
               ),
               title: Text(reservation['user']!),
-              subtitle:
-                  Text('Place ${reservation['spot']} • ${reservation['time']}'),
+              subtitle: Text('Place ${reservation['spot']} • ${reservation['time']}'),
               trailing: PopupMenuButton(
                 itemBuilder: (context) => [
                   const PopupMenuItem(value: 'edit', child: Text('Modifier')),
                   const PopupMenuItem(value: 'cancel', child: Text('Annuler')),
                 ],
-                onSelected: (value) =>
-                    _handleReservationAction(value, reservation['user']!),
+                onSelected: (value) => _handleReservationAction(value, reservation['user']!),
               ),
             ),
           );
@@ -214,8 +217,7 @@ class _AdminPanelState extends State<AdminPanel> {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child:
-                      const Icon(Icons.local_parking, color: Color(0xFF1E3A8A)),
+                  child: const Icon(Icons.local_parking, color: Color(0xFF1E3A8A)),
                 ),
                 const SizedBox(width: 15),
                 const Text(
@@ -268,13 +270,15 @@ class _AdminPanelState extends State<AdminPanel> {
               ),
             ),
             const SizedBox(height: 10),
+
+            // ✅ Menu items avec les bons index
             _buildMenuItem(Icons.dashboard, 'Dashboard', 0),
-            _buildMenuItem(Icons.local_parking, 'Places de Parking', 1,
-                badge: 60),
+            _buildMenuItem(Icons.local_parking, 'Places de Parking', 1, badge: 60),
             _buildMenuItem(Icons.event_seat, 'Réservations', 2, badge: 18),
             _buildMenuItem(Icons.history, 'Historique', 3, badge: 250),
             _buildMenuItem(Icons.people, 'Utilisateurs', 4, badge: 12),
             _buildMenuItem(Icons.person_add, 'Ajouter un utilisateur', 5),
+
             const Spacer(),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
@@ -282,8 +286,7 @@ class _AdminPanelState extends State<AdminPanel> {
                 children: [
                   CircleAvatar(
                     backgroundColor: Colors.white.withOpacity(0.2),
-                    child:
-                        const Text('AD', style: TextStyle(color: Colors.white)),
+                    child: const Text('AD', style: TextStyle(color: Colors.white)),
                   ),
                   const SizedBox(width: 15),
                   const Column(
@@ -327,12 +330,11 @@ class _AdminPanelState extends State<AdminPanel> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
         decoration: BoxDecoration(
-          color:
-              isSelected ? Colors.white.withOpacity(0.2) : Colors.transparent,
+          color: isSelected ? Colors.white.withOpacity(0.2) : Colors.transparent,
           border: isSelected
               ? const Border(
-                  left: BorderSide(color: Colors.white, width: 3),
-                )
+            left: BorderSide(color: Colors.white, width: 3),
+          )
               : null,
         ),
         child: Row(
@@ -349,8 +351,7 @@ class _AdminPanelState extends State<AdminPanel> {
             const Spacer(),
             if (badge != null)
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),

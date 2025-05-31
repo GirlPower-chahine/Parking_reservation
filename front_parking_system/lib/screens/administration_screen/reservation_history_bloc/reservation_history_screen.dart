@@ -120,8 +120,9 @@ class _ReservationHistoryViewState extends State<ReservationHistoryView> {
           _buildFilterChip('ALL', 'Toutes', Icons.list),
           _buildFilterChip('ACTIVE', 'Actives', Icons.check_circle),
           _buildFilterChip('COMPLETED', 'Terminées', Icons.done_all),
-          _buildFilterChip('CANCELLED_BY_USER', 'Annulées', Icons.cancel),
           _buildFilterChip('CHECKED_IN', 'Arrivées', Icons.login),
+          _buildFilterChip('CANCELLED_BY_USER', 'Annulées', Icons.cancel),
+          _buildFilterChip('EXPIRED', 'Expirées', Icons.schedule),
           const SizedBox(width: 8),
           _buildDateRangeButton(),
           _buildQuickFilters(),
@@ -183,14 +184,14 @@ class _ReservationHistoryViewState extends State<ReservationHistoryView> {
       icon: const Icon(Icons.filter_list, size: 20),
       onSelected: (value) {
         switch (value) {
-          case 'today':
-            context.read<ReservationHistoryBloc>().add(LoadCompletedReservationsToday());
+          case 'active':
+            context.read<ReservationHistoryBloc>().add(LoadActiveReservations());
             break;
-          case 'week':
-            context.read<ReservationHistoryBloc>().add(LoadCancelledReservationsThisWeek());
+          case 'completed':
+            context.read<ReservationHistoryBloc>().add(LoadCompletedReservations());
             break;
-          case 'month':
-            context.read<ReservationHistoryBloc>().add(LoadLastMonthHistory());
+          case 'cancelled':
+            context.read<ReservationHistoryBloc>().add(LoadCancelledReservations());
             break;
           case 'year':
             context.read<ReservationHistoryBloc>().add(LoadYearlyReservations());
@@ -199,9 +200,9 @@ class _ReservationHistoryViewState extends State<ReservationHistoryView> {
       },
       padding: EdgeInsets.zero,
       itemBuilder: (context) => [
-        const PopupMenuItem(value: 'today', child: Text('Complétées aujourd\'hui')),
-        const PopupMenuItem(value: 'week', child: Text('Annulées cette semaine')),
-        const PopupMenuItem(value: 'month', child: Text('Mois dernier')),
+        const PopupMenuItem(value: 'active', child: Text('Réservations actives')),
+        const PopupMenuItem(value: 'completed', child: Text('Réservations terminées')),
+        const PopupMenuItem(value: 'cancelled', child: Text('Réservations annulées')),
         const PopupMenuItem(value: 'year', child: Text('Toute l\'année')),
       ],
     );
@@ -306,6 +307,11 @@ class _ReservationHistoryViewState extends State<ReservationHistoryView> {
                     },
                     child: const Text('Réessayer'),
                   ),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: () => _testReservationHistoryEndpoint(),
+                    child: const Text('Test API'),
+                  ),
                 ],
               ),
             ),
@@ -340,8 +346,6 @@ class _ReservationHistoryViewState extends State<ReservationHistoryView> {
       },
     );
   }
-
-  // ... (garder le reste des méthodes _buildReservationCard, etc. mais avec des tailles optimisées)
 
   Widget _buildReservationCard(ReservationHistoryDTO reservation) {
     return Card(
@@ -433,6 +437,47 @@ class _ReservationHistoryViewState extends State<ReservationHistoryView> {
                 ],
               ),
             ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Text(
+                  'Créée le ${_formatDateTime(reservation.createdAt)}',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                const Spacer(),
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert, size: 16),
+                  onSelected: (value) => _handleReservationAction(value, reservation),
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'details',
+                      child: Row(
+                        children: [
+                          Icon(Icons.info, size: 16),
+                          SizedBox(width: 8),
+                          Text('Détails'),
+                        ],
+                      ),
+                    ),
+                    if (reservation.status.toUpperCase() == 'ACTIVE') ...[
+                      const PopupMenuItem(
+                        value: 'cancel',
+                        child: Row(
+                          children: [
+                            Icon(Icons.cancel, size: 16, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text('Annuler', style: TextStyle(color: Colors.red)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -461,34 +506,65 @@ class _ReservationHistoryViewState extends State<ReservationHistoryView> {
     );
   }
 
-  // Méthodes utilitaires (garder les mêmes)
+  // Méthodes utilitaires avec support des vrais statuts
   Color _getStatusColor(String status) {
-    switch (status) {
-      case 'ACTIVE': return Colors.green;
-      case 'COMPLETED': return Colors.blue;
-      case 'CANCELLED_BY_USER': return Colors.red;
-      case 'CHECKED_IN': return Colors.orange;
-      default: return Colors.grey;
+    switch (status.toUpperCase()) {
+      case 'ACTIVE':
+        return Colors.green;
+      case 'COMPLETED':
+        return Colors.blue;
+      case 'CHECKED_IN':
+        return Colors.orange;
+      case 'CANCELLED':
+      case 'CANCELLED_BY_USER':
+        return Colors.red;
+      case 'EXPIRED':
+        return Colors.grey;
+      case 'CANCELLED_AUTO':
+        return Colors.red.shade300;
+      default:
+        return Colors.grey;
     }
   }
 
   IconData _getStatusIcon(String status) {
-    switch (status) {
-      case 'ACTIVE': return Icons.check_circle;
-      case 'COMPLETED': return Icons.done_all;
-      case 'CANCELLED_BY_USER': return Icons.cancel;
-      case 'CHECKED_IN': return Icons.login;
-      default: return Icons.help;
+    switch (status.toUpperCase()) {
+      case 'ACTIVE':
+        return Icons.check_circle;
+      case 'COMPLETED':
+        return Icons.done_all;
+      case 'CHECKED_IN':
+        return Icons.login;
+      case 'CANCELLED':
+      case 'CANCELLED_BY_USER':
+        return Icons.cancel;
+      case 'EXPIRED':
+        return Icons.schedule;
+      case 'CANCELLED_AUTO':
+        return Icons.auto_delete;
+      default:
+        return Icons.help;
     }
   }
 
   String _getStatusText(String status) {
-    switch (status) {
-      case 'ACTIVE': return 'Active';
-      case 'COMPLETED': return 'Terminée';
-      case 'CANCELLED_BY_USER': return 'Annulée';
-      case 'CHECKED_IN': return 'Arrivée';
-      default: return 'Inconnu';
+    switch (status.toUpperCase()) {
+      case 'ACTIVE':
+        return 'Active';
+      case 'COMPLETED':
+        return 'Terminée';
+      case 'CHECKED_IN':
+        return 'Arrivée';
+      case 'CANCELLED':
+        return 'Annulée';
+      case 'CANCELLED_BY_USER':
+        return 'Annulée par utilisateur';
+      case 'EXPIRED':
+        return 'Expirée';
+      case 'CANCELLED_AUTO':
+        return 'Annulation automatique';
+      default:
+        return status;
     }
   }
 
@@ -511,12 +587,17 @@ class _ReservationHistoryViewState extends State<ReservationHistoryView> {
   }
 
   String _formatTimeSlot(String timeSlot) {
-    switch (timeSlot) {
-      case 'MORNING': return 'Matin';
-      case 'AFTERNOON': return 'A-midi';
-      case 'EVENING': return 'Soir';
-      case 'FULL_DAY': return 'Journée';
-      default: return timeSlot;
+    switch (timeSlot.toUpperCase()) {
+      case 'MORNING':
+        return 'Matin';
+      case 'AFTERNOON':
+        return 'A-midi';
+      case 'EVENING':
+        return 'Soir';
+      case 'FULL_DAY':
+        return 'Journée';
+      default:
+        return timeSlot;
     }
   }
 
@@ -538,6 +619,144 @@ class _ReservationHistoryViewState extends State<ReservationHistoryView> {
           endDate: picked.end,
         ),
       );
+    }
+  }
+
+  void _handleReservationAction(String action, ReservationHistoryDTO reservation) {
+    switch (action) {
+      case 'details':
+        _showReservationDetails(reservation);
+        break;
+      case 'cancel':
+        _showCancelConfirmation(reservation);
+        break;
+    }
+  }
+
+  void _showReservationDetails(ReservationHistoryDTO reservation) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Détails de la réservation'),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildDetailRow('ID', reservation.reservationId),
+              _buildDetailRow('Utilisateur', reservation.userName),
+              _buildDetailRow('Place', reservation.spotId),
+              _buildDetailRow('Date', _formatDate(reservation.reservationDate)),
+              _buildDetailRow('Créneau', _formatTimeSlot(reservation.timeSlot)),
+              _buildDetailRow('Statut', _getStatusText(reservation.status)),
+              _buildDetailRow('Groupe', reservation.groupId),
+              _buildDetailRow('Créée le', _formatDateTime(reservation.createdAt)),
+              if (reservation.checkInTime != null)
+                _buildDetailRow('Arrivée', _formatDateTime(reservation.checkInTime!)),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Fermer'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 80,
+            child: Text(
+              '$label:',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+          Expanded(
+            child: Text(value),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCancelConfirmation(ReservationHistoryDTO reservation) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Annuler la réservation'),
+        content: Text(
+          'Êtes-vous sûr de vouloir annuler la réservation de ${reservation.userName} pour la place ${reservation.spotId} ?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Non'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Fonctionnalité d\'annulation à implémenter')),
+              );
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Oui, annuler'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Fonction de test pour débugger l'API
+  void _testReservationHistoryEndpoint() async {
+    try {
+      print('🧪 Test de l\'endpoint historique...');
+
+      final repository = ReservationHistoryRepository(ApiService());
+      final reservations = await repository.getYearlyReservations();
+
+      print('✅ Test réussi: ${reservations.length} réservations trouvées');
+
+      if (reservations.isNotEmpty) {
+        print('📋 Première réservation:');
+        print('   - ID: ${reservations.first.reservationId}');
+        print('   - User: ${reservations.first.userName}');
+        print('   - Status: ${reservations.first.status}');
+        print('   - Spot: ${reservations.first.spotId}');
+      }
+
+      // Test des statuts uniques
+      final uniqueStatuses = reservations.map((r) => r.status).toSet();
+      print('📊 Statuts trouvés: $uniqueStatuses');
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Test API réussi: ${reservations.length} réservations'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+
+    } catch (e) {
+      print('❌ Erreur test: $e');
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur API: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 }

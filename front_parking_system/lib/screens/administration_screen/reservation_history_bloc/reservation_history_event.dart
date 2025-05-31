@@ -24,11 +24,11 @@ class LoadReservationsHistoryByStatus extends ReservationHistoryEvent {
   });
 }
 
-class LoadLastMonthHistory extends ReservationHistoryEvent {}
+class LoadActiveReservations extends ReservationHistoryEvent {}
 
-class LoadCancelledReservationsThisWeek extends ReservationHistoryEvent {}
+class LoadCompletedReservations extends ReservationHistoryEvent {}
 
-class LoadCompletedReservationsToday extends ReservationHistoryEvent {}
+class LoadCancelledReservations extends ReservationHistoryEvent {}
 
 class LoadYearlyReservations extends ReservationHistoryEvent {}
 

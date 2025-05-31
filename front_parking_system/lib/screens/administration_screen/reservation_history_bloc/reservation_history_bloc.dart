@@ -8,13 +8,12 @@ part 'reservation_history_state.dart';
 class ReservationHistoryBloc extends Bloc<ReservationHistoryEvent, ReservationHistoryState> {
   final ReservationHistoryRepository repository;
 
-  ReservationHistoryBloc({required this.repository})
-      : super(const ReservationHistoryState()) {
+  ReservationHistoryBloc({required this.repository}) : super(const ReservationHistoryState()) {
     on<LoadAllReservationsHistory>(_onLoadAllReservationsHistory);
     on<LoadReservationsHistoryByStatus>(_onLoadReservationsHistoryByStatus);
-    on<LoadLastMonthHistory>(_onLoadLastMonthHistory);
-    on<LoadCancelledReservationsThisWeek>(_onLoadCancelledReservationsThisWeek);
-    on<LoadCompletedReservationsToday>(_onLoadCompletedReservationsToday);
+    on<LoadActiveReservations>(_onLoadActiveReservations);
+    on<LoadCompletedReservations>(_onLoadCompletedReservations);
+    on<LoadCancelledReservations>(_onLoadCancelledReservations);
     on<LoadYearlyReservations>(_onLoadYearlyReservations);
     on<FilterReservationsByDate>(_onFilterReservationsByDate);
     on<FilterReservationsByStatus>(_onFilterReservationsByStatus);
@@ -22,8 +21,10 @@ class ReservationHistoryBloc extends Bloc<ReservationHistoryEvent, ReservationHi
     on<ResetFilters>(_onResetFilters);
   }
 
-  Future<void> _onLoadAllReservationsHistory(LoadAllReservationsHistory event,
-      Emitter<ReservationHistoryState> emit,) async {
+  Future<void> _onLoadAllReservationsHistory(
+      LoadAllReservationsHistory event,
+      Emitter<ReservationHistoryState> emit,
+      ) async {
     emit(state.copyWith(status: ReservationHistoryStatus.loading));
     try {
       final reservations = await repository.getAllReservationsHistory(
@@ -45,7 +46,8 @@ class ReservationHistoryBloc extends Bloc<ReservationHistoryEvent, ReservationHi
 
   Future<void> _onLoadReservationsHistoryByStatus(
       LoadReservationsHistoryByStatus event,
-      Emitter<ReservationHistoryState> emit,) async {
+      Emitter<ReservationHistoryState> emit,
+      ) async {
     emit(state.copyWith(status: ReservationHistoryStatus.loading));
     try {
       final reservations = await repository.getReservationsHistoryByStatus(
@@ -67,15 +69,18 @@ class ReservationHistoryBloc extends Bloc<ReservationHistoryEvent, ReservationHi
     }
   }
 
-  Future<void> _onLoadLastMonthHistory(LoadLastMonthHistory event,
-      Emitter<ReservationHistoryState> emit,) async {
+  Future<void> _onLoadActiveReservations(
+      LoadActiveReservations event,
+      Emitter<ReservationHistoryState> emit,
+      ) async {
     emit(state.copyWith(status: ReservationHistoryStatus.loading));
     try {
-      final reservations = await repository.getLastMonthHistory();
+      final reservations = await repository.getActiveReservations();
       emit(state.copyWith(
         status: ReservationHistoryStatus.success,
         reservations: reservations,
         filteredReservations: reservations,
+        currentFilter: 'ACTIVE',
       ));
     } catch (e) {
       emit(state.copyWith(
@@ -85,32 +90,13 @@ class ReservationHistoryBloc extends Bloc<ReservationHistoryEvent, ReservationHi
     }
   }
 
-  Future<void> _onLoadCancelledReservationsThisWeek(
-      LoadCancelledReservationsThisWeek event,
-      Emitter<ReservationHistoryState> emit,) async {
+  Future<void> _onLoadCompletedReservations(
+      LoadCompletedReservations event,
+      Emitter<ReservationHistoryState> emit,
+      ) async {
     emit(state.copyWith(status: ReservationHistoryStatus.loading));
     try {
-      final reservations = await repository.getCancelledReservationsThisWeek();
-      emit(state.copyWith(
-        status: ReservationHistoryStatus.success,
-        reservations: reservations,
-        filteredReservations: reservations,
-        currentFilter: 'CANCELLED_BY_USER',
-      ));
-    } catch (e) {
-      emit(state.copyWith(
-        status: ReservationHistoryStatus.error,
-        error: e.toString(),
-      ));
-    }
-  }
-
-  Future<void> _onLoadCompletedReservationsToday(
-      LoadCompletedReservationsToday event,
-      Emitter<ReservationHistoryState> emit,) async {
-    emit(state.copyWith(status: ReservationHistoryStatus.loading));
-    try {
-      final reservations = await repository.getCompletedReservationsToday();
+      final reservations = await repository.getCompletedReservations();
       emit(state.copyWith(
         status: ReservationHistoryStatus.success,
         reservations: reservations,
@@ -125,8 +111,31 @@ class ReservationHistoryBloc extends Bloc<ReservationHistoryEvent, ReservationHi
     }
   }
 
-  Future<void> _onLoadYearlyReservations(LoadYearlyReservations event,
-      Emitter<ReservationHistoryState> emit,) async {
+  Future<void> _onLoadCancelledReservations(
+      LoadCancelledReservations event,
+      Emitter<ReservationHistoryState> emit,
+      ) async {
+    emit(state.copyWith(status: ReservationHistoryStatus.loading));
+    try {
+      final reservations = await repository.getCancelledReservations();
+      emit(state.copyWith(
+        status: ReservationHistoryStatus.success,
+        reservations: reservations,
+        filteredReservations: reservations,
+        currentFilter: 'CANCELLED_BY_USER',
+      ));
+    } catch (e) {
+      emit(state.copyWith(
+        status: ReservationHistoryStatus.error,
+        error: e.toString(),
+      ));
+    }
+  }
+
+  Future<void> _onLoadYearlyReservations(
+      LoadYearlyReservations event,
+      Emitter<ReservationHistoryState> emit,
+      ) async {
     emit(state.copyWith(status: ReservationHistoryStatus.loading));
     try {
       final reservations = await repository.getYearlyReservations();
@@ -143,12 +152,13 @@ class ReservationHistoryBloc extends Bloc<ReservationHistoryEvent, ReservationHi
     }
   }
 
-  void _onFilterReservationsByDate(FilterReservationsByDate event,
-      Emitter<ReservationHistoryState> emit,) {
+  void _onFilterReservationsByDate(
+      FilterReservationsByDate event,
+      Emitter<ReservationHistoryState> emit,
+      ) {
     final filtered = state.reservations.where((reservation) {
       final reservationDate = DateTime.parse(reservation.reservationDate);
-      return reservationDate.isAfter(
-          event.startDate.subtract(const Duration(days: 1))) &&
+      return reservationDate.isAfter(event.startDate.subtract(const Duration(days: 1))) &&
           reservationDate.isBefore(event.endDate.add(const Duration(days: 1)));
     }).toList();
 
@@ -159,10 +169,12 @@ class ReservationHistoryBloc extends Bloc<ReservationHistoryEvent, ReservationHi
     ));
   }
 
-  void _onFilterReservationsByStatus(FilterReservationsByStatus event,
-      Emitter<ReservationHistoryState> emit,) {
+  void _onFilterReservationsByStatus(
+      FilterReservationsByStatus event,
+      Emitter<ReservationHistoryState> emit,
+      ) {
     final filtered = state.reservations
-        .where((reservation) => reservation.status == event.status)
+        .where((reservation) => reservation.status.toUpperCase() == event.status.toUpperCase())
         .toList();
 
     emit(state.copyWith(
@@ -171,8 +183,10 @@ class ReservationHistoryBloc extends Bloc<ReservationHistoryEvent, ReservationHi
     ));
   }
 
-  void _onSearchReservations(SearchReservations event,
-      Emitter<ReservationHistoryState> emit,) {
+  void _onSearchReservations(
+      SearchReservations event,
+      Emitter<ReservationHistoryState> emit,
+      ) {
     if (event.searchTerm.isEmpty) {
       emit(state.copyWith(
         filteredReservations: state.reservations,
@@ -194,8 +208,10 @@ class ReservationHistoryBloc extends Bloc<ReservationHistoryEvent, ReservationHi
     ));
   }
 
-  void _onResetFilters(ResetFilters event,
-      Emitter<ReservationHistoryState> emit,) {
+  void _onResetFilters(
+      ResetFilters event,
+      Emitter<ReservationHistoryState> emit,
+      ) {
     emit(state.copyWith(
       filteredReservations: state.reservations,
       currentFilter: null,
