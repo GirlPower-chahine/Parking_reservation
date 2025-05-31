@@ -76,4 +76,25 @@ public class EmailQueueService {
             log.error("Erreur mise en queue rappel: {}", e.getMessage());
         }
     }
+
+    public void queueReservationModification(String email, String spotId, String date, String timeSlot) {
+        Map<String, String> emailData = Map.of(
+                "type", "reservation_modification",
+                "email", email,
+                "spotId", spotId,
+                "date", date,
+                "timeSlot", timeSlot
+        );
+
+        try {
+            rabbitTemplate.convertAndSend(
+                    RabbitMQConfig.EXCHANGE,
+                    RabbitMQConfig.EMAIL_ROUTING_KEY,
+                    emailData
+            );
+            log.info("Email de modification mis en queue pour: {}", email);
+        } catch (Exception e) {
+            log.error("Erreur mise en queue email de modification: {}", e.getMessage());
+        }
+    }
 }

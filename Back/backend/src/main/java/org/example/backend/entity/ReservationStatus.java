@@ -7,5 +7,6 @@ public enum ReservationStatus {
     CANCELLED,
     EXPIRED,
     CANCELLED_BY_USER,
-    CANCELLED_AUTO
+    CANCELLED_AUTO,
+    CANCELLED_BY_ADMIN
 }

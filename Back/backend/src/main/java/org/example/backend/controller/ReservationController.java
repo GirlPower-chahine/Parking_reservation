@@ -7,6 +7,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -160,5 +161,59 @@ public class ReservationController {
         // Pour l'instant, elle est simplifiée
         return reservationService.getUserIdByUsername(username);
     }
+
+    @PostMapping("/secretary/create-for-user")
+    @PreAuthorize("hasRole('SECRETARY')")
+    public ResponseEntity<List<ReservationResponseDTO>> createReservationForUser(
+            @RequestParam String userEmail,
+            @RequestBody ReservationDTO reservationDTO) {
+
+        UUID userId = reservationService.getUserIdByUsername(userEmail);
+        List<ReservationResponseDTO> reservations = reservationService.createReservation(userId, reservationDTO);
+        return ResponseEntity.ok(reservations);
+    }
+
+    @DeleteMapping("/secretary/cancel/{reservationId}")
+    @PreAuthorize("hasRole('SECRETARY')")
+    public ResponseEntity<Void> cancelReservationAsSecretary(
+            @PathVariable UUID reservationId,
+            @RequestParam String reason) {
+
+        reservationService.cancelReservationAsSecretary(reservationId, reason);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/secretary/modify/{reservationId}")
+    @PreAuthorize("hasRole('SECRETARY')")
+    public ResponseEntity<ReservationResponseDTO> modifyReservationAsSecretary(
+            @PathVariable UUID reservationId,
+            @RequestBody ModifyReservationDTO modifyDTO) {
+
+        ReservationResponseDTO modified = reservationService.modifyReservationAsSecretary(reservationId, modifyDTO);
+        return ResponseEntity.ok(modified);
+    }
+
+    @GetMapping("/secretary/user-reservations")
+    @PreAuthorize("hasRole('SECRETARY')")
+    public ResponseEntity<List<ReservationResponseDTO>> getUserReservationsAsSecretary(
+            @RequestParam String userEmail) {
+
+        UUID userId = reservationService.getUserIdByUsername(userEmail);
+        List<ReservationResponseDTO> reservations = reservationService.getUserActiveReservations(userId);
+        return ResponseEntity.ok(reservations);
+    }
+
+    @PutMapping("/{reservationId}")
+    @PreAuthorize("hasRole('EMPLOYEE') or hasRole('SECRETARY') or hasRole('MANAGER')")
+    public ResponseEntity<ReservationResponseDTO> modifyReservation(
+            @PathVariable UUID reservationId,
+            @RequestBody ModifyReservationDTO modifyDTO,
+            Authentication authentication) {
+
+        UUID userId = reservationService.getUserIdByUsername(authentication.getName());
+        ReservationResponseDTO modified = reservationService.modifyReservation(userId, reservationId, modifyDTO);
+        return ResponseEntity.ok(modified);
+    }
+
 
 }

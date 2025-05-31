@@ -55,4 +55,7 @@ public class Reservation {
 
     @Column
     private String groupId; // Pour regrouper les réservations multi-jours
+
+    @Column(name = "cancellation_reason")
+    private String cancellationReason;
 }

@@ -81,7 +81,7 @@ public class ReservationService {
         }
     }
 
-    // Remplacer la méthode validateReservationRequest dans ReservationService.java
+
 
     private void validateReservationRequest(User user, ReservationDTO dto) {
         LocalDate today = LocalDate.now();
@@ -94,29 +94,54 @@ public class ReservationService {
             throw new BusinessException("La date de fin doit être après la date de début");
         }
 
-        // MODIFICATION IMPORTANTE : Calculer les JOURS OUVRABLES
         List<LocalDate> requestedWorkingDays = generateWorkingDays(dto.getStartDate(), dto.getEndDate());
         long numberOfWorkingDaysInRequest = requestedWorkingDays.size();
 
-        // Validation de la durée maximale pour la demande
         if ("EMPLOYEE".equals(user.getRole()) && numberOfWorkingDaysInRequest > 5) {
-            throw new BusinessException("Les employés ne peuvent réserver que 5 jours ouvrables maximum");
+            throw new BusinessException("Les employés ne peuvent réserver que 5 jours ouvrables maximum par demande");
         }
 
         if ("MANAGER".equals(user.getRole()) && numberOfWorkingDaysInRequest > 30) {
-            throw new BusinessException("Les managers ne peuvent réserver que 30 jours ouvrables maximum");
+            throw new BusinessException("Les managers ne peuvent réserver que 30 jours ouvrables maximum par demande");
         }
 
-        // Vérifier le nombre de réservations actives (en jours ouvrables)
-        long activeWorkingDaysCount = countActiveWorkingDays(user.getUserId(), today, dto.getEndDate());
+        if ("EMPLOYEE".equals(user.getRole())) {
+            long activeWorkingDaysCount = countActiveWorkingDays(user.getUserId(), today, dto.getEndDate());
 
-        // Validation de la limite cumulée
-        if ("EMPLOYEE".equals(user.getRole()) && (activeWorkingDaysCount + numberOfWorkingDaysInRequest) > 5) {
-            throw new BusinessException(String.format(
-                    "Limite de 5 jours ouvrables atteinte. Vous avez déjà %d jour(s) réservé(s) et tentez d'en ajouter %d.",
-                    activeWorkingDaysCount, numberOfWorkingDaysInRequest
-            ));
+            if ((activeWorkingDaysCount + numberOfWorkingDaysInRequest) > 5) {
+                throw new BusinessException(String.format(
+                        "Limite de 5 jours ouvrables atteinte. Vous avez déjà %d jour(s) réservé(s) et tentez d'en ajouter %d.",
+                        activeWorkingDaysCount, numberOfWorkingDaysInRequest
+                ));
+            }
         }
+
+        if ("MANAGER".equals(user.getRole())) {
+            long totalActiveReservations = countAllActiveWorkingDays(user.getUserId());
+
+            if ((totalActiveReservations + numberOfWorkingDaysInRequest) > 30) {
+                throw new BusinessException(String.format(
+                        "Limite de 30 jours ouvrables atteinte. Vous avez déjà %d jour(s) réservé(s) et tentez d'en ajouter %d.",
+                        totalActiveReservations, numberOfWorkingDaysInRequest
+                ));
+            }
+        }
+    }
+
+    private long countAllActiveWorkingDays(UUID userId) {
+        LocalDate today = LocalDate.now();
+
+        List<Reservation> activeReservations = reservationRepository
+                .findActiveReservationsByUser(userId).stream()
+                .filter(r -> !r.getStartDateTime().toLocalDate().isBefore(today))
+                .collect(Collectors.toList());
+
+        return activeReservations.stream()
+                .map(r -> r.getStartDateTime().toLocalDate())
+                .distinct()
+                .filter(date -> date.getDayOfWeek() != DayOfWeek.SATURDAY
+                        && date.getDayOfWeek() != DayOfWeek.SUNDAY)
+                .count();
     }
 
     private long countActiveWorkingDays(UUID userId, LocalDate fromDate, LocalDate toDate) {
@@ -354,5 +379,164 @@ public class ReservationService {
         dto.setGroupId(reservation.getGroupId());
 
         return dto;
+    }
+
+    @Transactional
+    public void cancelReservationAsSecretary(UUID reservationId, String reason) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new BusinessException("Réservation non trouvée"));
+
+        if (reservation.getStatus() != ReservationStatus.ACTIVE) {
+            throw new BusinessException("Cette réservation ne peut pas être annulée");
+        }
+
+        reservation.setStatus(ReservationStatus.CANCELLED_BY_ADMIN);
+        reservation.setCanceledAt(LocalDateTime.now());
+        reservation.setCancellationReason(reason); // Ajouter ce champ dans l'entité si nécessaire
+
+        Reservation saved = reservationRepository.save(reservation);
+
+        // Envoyer email à l'utilisateur
+        emailQueueService.queueReservationCancellation(
+                reservation.getUser().getUsername(),
+                reservation.getParkingSpot().getSpotId(),
+                reservation.getStartDateTime().toLocalDate().toString()
+        );
+
+        log.info("Réservation {} annulée par la secrétaire. Raison: {}", reservationId, reason);
+    }
+
+    @Transactional
+    public ReservationResponseDTO modifyReservationAsSecretary(UUID reservationId, ModifyReservationDTO modifyDTO) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new BusinessException("Réservation non trouvée"));
+
+        if (reservation.getStatus() != ReservationStatus.ACTIVE) {
+            throw new BusinessException("Seules les réservations actives peuvent être modifiées");
+        }
+
+        // Vérifier si la nouvelle place est disponible
+        if (modifyDTO.getNewSpotId() != null && !modifyDTO.getNewSpotId().equals(reservation.getParkingSpot().getSpotId())) {
+            ParkingSpot newSpot = parkingSpotRepository.findById(modifyDTO.getNewSpotId())
+                    .orElseThrow(() -> new BusinessException("Place non trouvée"));
+
+            // Vérifier disponibilité
+            boolean isAvailable = reservationRepository.findActiveReservationBySpotAndDateTime(
+                    modifyDTO.getNewSpotId(),
+                    reservation.getStartDateTime().toLocalDate(),
+                    reservation.getStartDateTime().toLocalTime().isBefore(LocalTime.of(14, 0)) ? "MORNING" : "AFTERNOON"
+            ) == null;
+
+            if (!isAvailable) {
+                throw new BusinessException("La nouvelle place n'est pas disponible");
+            }
+
+            reservation.setParkingSpot(newSpot);
+        }
+
+        // Modifier la date si nécessaire
+        if (modifyDTO.getNewDate() != null) {
+            LocalTime startTime = reservation.getStartDateTime().toLocalTime();
+            LocalTime endTime = reservation.getEndDateTime().toLocalTime();
+
+            reservation.setStartDateTime(modifyDTO.getNewDate().atTime(startTime));
+            reservation.setEndDateTime(modifyDTO.getNewDate().atTime(endTime));
+        }
+
+        Reservation saved = reservationRepository.save(reservation);
+
+        log.info("Réservation {} modifiée par la secrétaire", reservationId);
+
+        return convertToResponseDTO(saved);
+    }
+
+    @Transactional
+    public ReservationResponseDTO modifyReservation(UUID userId, UUID reservationId, ModifyReservationDTO modifyDTO) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new BusinessException("Réservation non trouvée"));
+
+        if (!reservation.getUser().getUserId().equals(userId)) {
+            throw new BusinessException("Vous ne pouvez modifier que vos propres réservations");
+        }
+
+        if (reservation.getStatus() != ReservationStatus.ACTIVE) {
+            throw new BusinessException("Seules les réservations actives peuvent être modifiées");
+        }
+
+        if (reservation.getStartDateTime().toLocalDate().isBefore(LocalDate.now())) {
+            throw new BusinessException("Impossible de modifier une réservation passée");
+        }
+
+        boolean isModified = false;
+
+        if (modifyDTO.getNewSpotId() != null && !modifyDTO.getNewSpotId().equals(reservation.getParkingSpot().getSpotId())) {
+            ParkingSpot newSpot = parkingSpotRepository.findById(modifyDTO.getNewSpotId())
+                    .orElseThrow(() -> new BusinessException("Nouvelle place non trouvée"));
+
+            String timeSlot = reservation.getStartDateTime().toLocalTime().equals(LocalTime.of(8, 0)) ? "MORNING" : "AFTERNOON";
+            Reservation existingReservation = reservationRepository.findActiveReservationBySpotAndDateTime(
+                    modifyDTO.getNewSpotId(),
+                    reservation.getStartDateTime().toLocalDate(),
+                    timeSlot
+            );
+
+            if (existingReservation != null && !existingReservation.getReservationId().equals(reservationId)) {
+                throw new BusinessException("La nouvelle place n'est pas disponible pour ce créneau");
+            }
+
+            reservation.setParkingSpot(newSpot);
+            isModified = true;
+        }
+
+        if (modifyDTO.getNewDate() != null && !modifyDTO.getNewDate().equals(reservation.getStartDateTime().toLocalDate())) {
+            if (modifyDTO.getNewDate().getDayOfWeek() == DayOfWeek.SATURDAY ||
+                    modifyDTO.getNewDate().getDayOfWeek() == DayOfWeek.SUNDAY) {
+                throw new BusinessException("Les réservations ne sont possibles que les jours ouvrables");
+            }
+
+            if (modifyDTO.getNewDate().isBefore(LocalDate.now())) {
+                throw new BusinessException("La nouvelle date ne peut pas être dans le passé");
+            }
+
+            // Vérifier la disponibilité à la nouvelle date
+            String spotId = reservation.getParkingSpot().getSpotId();
+            String timeSlot = reservation.getStartDateTime().toLocalTime().equals(LocalTime.of(8, 0)) ? "MORNING" : "AFTERNOON";
+
+            Reservation conflictingReservation = reservationRepository.findActiveReservationBySpotAndDateTime(
+                    spotId,
+                    modifyDTO.getNewDate(),
+                    timeSlot
+            );
+
+            if (conflictingReservation != null) {
+                throw new BusinessException("Cette place n'est pas disponible à la nouvelle date");
+            }
+
+            // Mettre à jour les dates
+            LocalTime startTime = reservation.getStartDateTime().toLocalTime();
+            LocalTime endTime = reservation.getEndDateTime().toLocalTime();
+
+            reservation.setStartDateTime(modifyDTO.getNewDate().atTime(startTime));
+            reservation.setEndDateTime(modifyDTO.getNewDate().atTime(endTime));
+            isModified = true;
+        }
+
+        if (!isModified) {
+            throw new BusinessException("Aucune modification demandée");
+        }
+
+        Reservation saved = reservationRepository.save(reservation);
+
+        // Envoyer un email de notification
+        emailQueueService.queueReservationModification(
+                reservation.getUser().getUsername(),
+                saved.getParkingSpot().getSpotId(),
+                saved.getStartDateTime().toLocalDate().toString(),
+                saved.getStartDateTime().toLocalTime().equals(LocalTime.of(8, 0)) ? "MORNING" : "AFTERNOON"
+        );
+
+        log.info("Réservation {} modifiée par l'utilisateur", reservationId);
+
+        return convertToResponseDTO(saved);
     }
 }
