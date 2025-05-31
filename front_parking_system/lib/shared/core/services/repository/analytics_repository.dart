@@ -104,8 +104,6 @@ class AnalyticsRepository {
         final result = historicalList
             .map((item) => HistoricalAnalyticsDTO.fromJson(item as Map<String, dynamic>))
             .toList();
-
-        print('✅ [REPO] Historical chargé: ${result.length} éléments');
         return result;
       } else {
         throw Exception('Erreur HTTP ${response.statusCode}');
